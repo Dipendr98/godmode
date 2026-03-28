@@ -42,17 +42,17 @@ export const TIER_CONFIGS: Record<Tier, TierConfig> = {
     name: 'free',
     label: 'Free',
     rateLimit: {
-      total: parseInt(process.env.RATE_LIMIT_TOTAL || '5', 10),
-      perMinute: 10,
-      perDay: 50,
+      total: 0, // unlimited
+      perMinute: 300,
+      perDay: 10000,
     },
-    ultraplinianTiers: ['fast'],
-    maxRaceModels: 12,
-    researchAccess: 'none',
-    datasetExportFormats: [],
-    canFlush: false,
-    canAccessMetadataEvents: false,
-    canDownloadCorpus: false,
+    ultraplinianTiers: ['fast', 'standard', 'smart', 'power', 'ultra'],
+    maxRaceModels: 100,
+    researchAccess: 'full',
+    datasetExportFormats: ['json', 'jsonl'],
+    canFlush: true,
+    canAccessMetadataEvents: true,
+    canDownloadCorpus: true,
   },
 
   pro: {
@@ -60,16 +60,16 @@ export const TIER_CONFIGS: Record<Tier, TierConfig> = {
     label: 'Pro',
     rateLimit: {
       total: 0, // unlimited
-      perMinute: 60,
-      perDay: 1000,
+      perMinute: 300,
+      perDay: 10000,
     },
-    ultraplinianTiers: ['fast', 'standard', 'smart', 'power'],
-    maxRaceModels: 36,
-    researchAccess: 'read',
-    datasetExportFormats: ['json'],
-    canFlush: false,
-    canAccessMetadataEvents: false,
-    canDownloadCorpus: false,
+    ultraplinianTiers: ['fast', 'standard', 'smart', 'power', 'ultra'],
+    maxRaceModels: 100,
+    researchAccess: 'full',
+    datasetExportFormats: ['json', 'jsonl'],
+    canFlush: true,
+    canAccessMetadataEvents: true,
+    canDownloadCorpus: true,
   },
 
   enterprise: {
