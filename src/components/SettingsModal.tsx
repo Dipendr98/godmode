@@ -68,9 +68,9 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-2xl bg-theme-bg border border-theme-primary rounded-lg shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-theme-bg border border-theme-primary rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-theme-primary">
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-theme-primary">
           <h2 className="text-xl font-bold theme-primary">Settings</h2>
           <button
             onClick={onClose}
@@ -81,10 +81,10 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex min-h-[400px]">
+        {/* Content Wrapper */}
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Sidebar */}
-          <nav className="w-48 border-r border-theme-primary p-2">
+          <nav className="w-44 flex-shrink-0 border-r border-theme-primary p-2 overflow-y-auto">
             <TabButton
               icon={<Key className="w-4 h-4" />}
               label="API Key"
@@ -1026,71 +1026,59 @@ function LiquidTab() {
 
           {/* Strategy interactions */}
           <div>
-            <h4 className="font-semibold mb-3 text-sm">How Liquid Interacts With Each Mode</h4>
-            <div className="space-y-2">
+            <h4 className="font-semibold mb-2 text-sm opacity-60 uppercase tracking-widest px-1">Strategy Orchestration</h4>
+            <div className="grid grid-cols-1 gap-1.5">
               {/* Standard */}
-              <div className="p-3 rounded-lg border border-theme-primary/30 bg-theme-dim">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-mono font-bold theme-primary">STANDARD</span>
+              <div className="p-2 rounded-lg border border-theme-primary/20 bg-theme-dim/40">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[10px] font-bold theme-primary">STANDARD</span>
                 </div>
-                <p className="text-xs theme-secondary">
-                  Streams tokens live as they arrive from a single model, instead of waiting for
-                  the complete response. Provides the familiar &quot;typing&quot; effect.
+                <p className="text-[11px] theme-secondary leading-normal opacity-80">
+                  Single-stream delivery. Mimics standard typing behavior from a solitary model source.
                 </p>
               </div>
 
               {/* Ultraplinian */}
-              <div className="p-3 rounded-lg border border-orange-500/30 bg-orange-500/5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Swords className="w-3 h-3 text-orange-400" />
-                  <span className="text-xs font-mono font-bold text-orange-400">ULTRAPLINIAN</span>
+              <div className="p-2 rounded-lg border border-orange-500/20 bg-orange-500/5">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Swords className="w-2.5 h-2.5 text-orange-400" />
+                  <span className="text-[10px] font-bold text-orange-400">ULTRAPLINIAN</span>
                 </div>
-                <p className="text-xs theme-secondary">
-                  Shows the first scored response immediately, then morphs the display as faster
-                  models finish and a higher-scoring leader emerges. Each upgrade must beat the
-                  current leader by the min-delta threshold above.
+                <p className="text-[11px] theme-secondary leading-normal opacity-80">
+                  Race-winner delivery. Shows first valid response followed by model-swapping upgrades.
                 </p>
               </div>
 
               {/* Consortium */}
-              <div className="p-3 rounded-lg border border-purple-500/30 bg-purple-500/5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Users className="w-3 h-3 text-purple-400" />
-                  <span className="text-xs font-mono font-bold text-purple-400">CONSORTIUM</span>
+              <div className="p-2 rounded-lg border border-purple-500/20 bg-purple-500/5">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Users className="w-2.5 h-2.5 text-purple-400" />
+                  <span className="text-[10px] font-bold text-purple-400">CONSORTIUM</span>
                 </div>
-                <p className="text-xs theme-secondary">
-                  Displays the best individual model response while the orchestrator collects and
-                  synthesizes all responses. When synthesis completes, the display morphs from the
-                  individual leader to the final ground-truth answer.
+                <p className="text-[11px] theme-secondary leading-normal opacity-80">
+                  Swarm synthesis. Displays the lead soloist until a collective group response is synthesized.
                 </p>
               </div>
 
               {/* Libertas */}
-              <div className="p-3 rounded-lg border border-fuchsia-500/30 bg-fuchsia-500/5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Skull className="w-3 h-3 text-fuchsia-400" />
-                  <span className="text-xs font-mono font-bold text-fuchsia-400">L1B3RT4S</span>
+              <div className="p-2 rounded-lg border border-fuchsia-500/20 bg-fuchsia-500/5">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Skull className="w-2.5 h-2.5 text-fuchsia-400" />
+                  <span className="text-[10px] font-bold text-fuchsia-400">L1B3RT4S</span>
                 </div>
-                <p className="text-xs theme-secondary">
-                  All jailbreak templates race in parallel instead of early-exiting on the first
-                  non-refusal. The best-scoring template response is served immediately, then
-                  progressively upgraded as higher-scoring templates complete. After all templates
-                  finish, the winner is handed to the Liquid refinement loop for iterative polishing.
+                <p className="text-[11px] theme-secondary leading-normal opacity-80">
+                  Parallel jailbreak racing. Hot-swaps responses as higher-scoring templates complete their run.
                 </p>
               </div>
 
               {/* Parseltongue */}
-              <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Skull className="w-3 h-3 text-green-400" />
-                  <span className="text-xs font-mono font-bold text-green-400">PARSELTONGUE</span>
+              <div className="p-2 rounded-lg border border-green-500/20 bg-green-500/5">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Skull className="w-2.5 h-2.5 text-green-400" />
+                  <span className="text-[10px] font-bold text-green-400">PARSELTONGUE</span>
                 </div>
-                <p className="text-xs theme-secondary">
-                  Parseltongue operates on the <em>input</em> side (obfuscating trigger words before
-                  they reach the model), while Liquid operates on the <em>output</em> side (upgrading
-                  responses as they arrive). They are fully independent and stack: Parseltongue
-                  encodes your prompt, the model responds, and Liquid delivers the response with
-                  live morphing.
+                <p className="text-[11px] theme-secondary leading-normal opacity-80">
+                  Input obfuscation. Masks triggers before firing; compatible with all delivery strategies.
                 </p>
               </div>
             </div>
