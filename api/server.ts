@@ -11,6 +11,7 @@
  */
 
 import express from 'express'
+import path from 'path'
 import cors from 'cors'
 import helmet from 'helmet'
 import { rateLimit } from './middleware/rateLimit'
@@ -235,6 +236,18 @@ app.use('/v1/dataset', apiKeyAuth, rateLimit, tierGate('dataset:export'), datase
 
 // Metadata: stats open to all auth'd users, events gated to Enterprise
 app.use('/v1/metadata', apiKeyAuth, metadataRoutes) // individual route-level gating in metadata routes
+
+// ── Static Frontend ───────────────────────────────────────────────────
+// Serve the static Next.js export from the 'out' directory
+// This allows the API container to serve the full website.
+const outPath = path.join(process.cwd(), 'out')
+app.use(express.static(outPath))
+
+// Catch-all: serve index.html for any non-API route (Next.js client-side routing)
+app.get('*', (_req, res, next) => {
+  if (_req.path.startsWith('/v1/')) return next()
+  res.sendFile(path.join(outPath, 'index.html'))
+})
 
 // Research: Pro+ for read access, Enterprise for full access
 app.use('/v1/research', apiKeyAuth, rateLimit, tierGate('research:read'), researchRoutes)
