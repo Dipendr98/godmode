@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { computeAutoTuneParams, type AutoTuneStrategy } from '../../src/lib/autotune'
 import { applyParseltongue, type ParseltongueConfig } from '../../src/lib/parseltongue'
 import { allModules, applySTMs, type STMModule } from '../../src/stm/modules'
-import { sendMessage } from '../../src/lib/openrouter'
+import { sendMessage, detectProvider } from '../../src/lib/openrouter'
 import { getSharedProfiles } from './autotune'
 import {
   GODMODE_SYSTEM_PROMPT,
@@ -656,14 +656,24 @@ chatRoutes.post('/completions', async (req, res) => {
         if (pipeline.finalParams.presence_penalty !== undefined) streamBody.presence_penalty = pipeline.finalParams.presence_penalty
         if (pipeline.finalParams.repetition_penalty !== undefined) streamBody.repetition_penalty = pipeline.finalParams.repetition_penalty
 
-        const upstreamRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const isPollinations = detectProvider(openrouter_api_key) === 'pollinations'
+        const upstreamUrl = isPollinations
+          ? 'https://gen.pollinations.ai/v1/chat/completions'
+          : 'https://openrouter.ai/api/v1/chat/completions'
+
+        const upstreamHeaders: Record<string, string> = {
+          'Authorization': `Bearer ${openrouter_api_key}`,
+          'Content-Type': 'application/json',
+        }
+
+        if (!isPollinations) {
+          upstreamHeaders['HTTP-Referer'] = 'https://godmod3.ai'
+          upstreamHeaders['X-Title'] = 'GODMOD3.AI'
+        }
+
+        const upstreamRes = await fetch(upstreamUrl, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openrouter_api_key}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://godmod3.ai',
-            'X-Title': 'GODMOD3.AI',
-          },
+          headers: upstreamHeaders,
           body: JSON.stringify(streamBody),
         })
 

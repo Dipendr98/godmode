@@ -35,6 +35,19 @@ import type { TierConfig } from './lib/tiers'
 const app = express()
 const PORT = parseInt(process.env.PORT || '7860', 10) // HF Spaces default
 
+// ── Environment Sync & Fallbacks ──────────────────────────────────────
+// If using Pollinations, sync the key to the main engine variable
+if (process.env.POLLINATIONS_API_KEY && !process.env.OPENROUTER_API_KEY) {
+  process.env.OPENROUTER_API_KEY = process.env.POLLINATIONS_API_KEY
+}
+
+// If an engine key exists but no GODMODE_API_KEY is set, use it as the default
+// This allows the server to be authenticated with the user's provider key out-of-the-box.
+if (!process.env.GODMODE_API_KEY && !process.env.GODMODE_API_KEYS && process.env.OPENROUTER_API_KEY) {
+  process.env.GODMODE_API_KEY = process.env.OPENROUTER_API_KEY
+}
+
+
 // ── Middleware ─────────────────────────────────────────────────────────
 // CORS: Allow configured origins. When self-hosting, set CORS_ORIGIN=* to allow all.
 const corsOrigins = process.env.CORS_ORIGIN === '*'
@@ -309,18 +322,19 @@ app.listen(PORT, '0.0.0.0', () => {
   `)
 
   if (!process.env.GODMODE_API_KEY && !process.env.GODMODE_API_KEYS) {
-    console.warn('  ⚠  WARNING: No GODMODE_API_KEY or GODMODE_API_KEYS set — all routes are unauthenticated!')
+    console.warn('  ⚠  WARNING: No GODMODE_API_KEY set — all routes are unauthenticated!')
   }
 
-  if (!process.env.GODMODE_TIER_KEYS) {
-    console.warn('  ⚠  WARNING: No GODMODE_TIER_KEYS set — all keys default to free tier')
+  const engineKeySet = !!process.env.OPENROUTER_API_KEY
+  if (!engineKeySet) {
+    console.warn('  ⚠  WARNING: No Engine Key set (OPENROUTER_API_KEY or POLLINATIONS_API_KEY) — external model calls will fail!')
   }
 
-  if (!process.env.HF_TOKEN) {
-    console.warn('  ⚠  WARNING: HF_TOKEN not set — auto-publish to HuggingFace is DISABLED')
-  } else if (!process.env.HF_DATASET_REPO) {
+  // HF Warnings: only show if specifically trying to enable but missing something
+  if (process.env.HF_TOKEN && !process.env.HF_DATASET_REPO) {
     console.warn('  ⚠  WARNING: HF_DATASET_REPO not set — auto-publish to HuggingFace is DISABLED (token is set but no target repo)')
   }
+
 
   // Start periodic HF flush (no-op if not configured)
   startPeriodicFlush()

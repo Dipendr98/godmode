@@ -10,6 +10,7 @@
 
 // ── GODMODE System Prompt (imported from single source of truth) ─────
 export { GODMODE_SYSTEM_PROMPT } from '../../src/lib/godmode-prompt'
+import { detectProvider } from '../../src/lib/openrouter'
 
 // ── Depth Directive (appended to all ULTRAPLINIAN prompts) ───────────
 
@@ -371,14 +372,24 @@ export async function queryModel(
     if (params.presence_penalty !== undefined) body.presence_penalty = params.presence_penalty
     if (params.repetition_penalty !== undefined) body.repetition_penalty = params.repetition_penalty
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const isPollinations = detectProvider(apiKey) === 'pollinations'
+    const upstreamUrl = isPollinations
+      ? 'https://gen.pollinations.ai/v1/chat/completions'
+      : 'https://openrouter.ai/api/v1/chat/completions'
+
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    }
+
+    if (!isPollinations) {
+      headers['HTTP-Referer'] = 'https://godmod3.ai'
+      headers['X-Title'] = 'GODMOD3.AI-ultraplinian-api'
+    }
+
+    const response = await fetch(upstreamUrl, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://godmod3.ai',
-        'X-Title': 'GODMOD3.AI-ultraplinian-api',
-      },
+      headers,
       body: JSON.stringify(body),
       signal,
     })
