@@ -1035,7 +1035,6 @@ export const useStore = create<AppState>()(
         conversations: state.conversations,
         currentConversationId: state.currentConversationId,
         currentPersona: state.currentPersona,
-        stmModules: state.stmModules,
         datasetGenerationEnabled: state.datasetGenerationEnabled,
         noLogMode: state.noLogMode,
         autoTuneEnabled: state.autoTuneEnabled,
@@ -1064,6 +1063,11 @@ export const useStore = create<AppState>()(
         ultraplinianApiKey: state.ultraplinianApiKey,
         swarmModeEnabled: state.swarmModeEnabled,
         swarmModels: state.swarmModels,
+        // Canvas persistence
+        canvasFiles: state.canvasFiles,
+        currentCanvasPath: state.currentCanvasPath,
+        showCanvas: state.showCanvas,
+        canvasAutoOpen: state.canvasAutoOpen,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
