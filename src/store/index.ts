@@ -629,30 +629,6 @@ export const useStore = create<AppState>()(
       customSystemPrompt: DEFAULT_GODMODE_PROMPT,
       useCustomSystemPrompt: true,
 
-      // CONSORTIUM initial state
-      consortiumEnabled: false,
-      consortiumTier: 'fast' as const,
-      consortiumPhase: 'idle' as const,
-      consortiumModelsCollected: 0,
-      consortiumModelsTotal: 0,
-      consortiumOrchestratorModel: null,
-
-      // Liquid Response initial state — universal feature layer
-      liquidResponseEnabled: true,
-      liquidMinDelta: 8,
-      promptsTried: 0,
-
-      // ULTRAPLINIAN initial state
-      ultraplinianEnabled: false,
-      ultraplinianTier: 'fast' as const,
-      ultraplinianApiUrl: '',
-      ultraplinianApiKey: '',
-      ultraplinianLiveContent: null,
-      ultraplinianLiveModel: null,
-      ultraplinianLiveScore: null,
-      ultraplinianModelsResponded: 0,
-      ultraplinianModelsTotal: 0,
-      ultraplinianRacing: false,
 
       // Computed getter
       get currentConversation() {

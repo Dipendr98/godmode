@@ -1,0 +1,60 @@
+  ??? Next.js 14.2.35
+
+   Creating an optimized production build ...
+ ??? Compiled successfully
+   Linting and checking validity of types ...
+node.exe : Failed to 
+compile.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:
+\Users\depen\AppData\Roami
+ng\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (F  
+  ailed to compile.:Str   
+ ing) [], RemoteExcept    
+ion
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+
+./src/store/index.ts:633:7
+Type error: An object 
+literal cannot have 
+multiple properties with 
+the same name.
+
+[0m [90m 631 |[39m[0m
+[0m [90m 632 |[39m     
+  [90m// CONSORTIUM 
+initial state[39m[0m
+[0m[31m[1m>[22m[39m[
+90m 633 |[39m       conso
+rtiumEnabled[33m:[39m [
+36mfalse[39m[33m,[39m[
+0m
+[0m [90m     |[39m     
+  [31m[1m^[22m[39m[0m
+[0m [90m 634 |[39m     
+  
+consortiumTier[33m:[39m 
+[32m'fast'[39m 
+[36mas[39m [36mconst[3
+9m[33m,[39m[0m
+[0m [90m 635 |[39m     
+  consortiumPhase[33m:[3
+9m [32m'idle'[39m 
+[36mas[39m [36mconst[3
+9m[33m,[39m[0m
+[0m [90m 636 |[39m     
+  consortiumModelsCollecte
+d[33m:[39m 
+[35m0[39m[33m,[39m[0m
+Next.js build worker 
+exited with code: 1 and 
+signal: null

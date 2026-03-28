@@ -16,7 +16,7 @@ COPY . .
 
 # Build Next.js app (outputs to the 'out' directory due to 'output: export')
 ENV NODE_ENV=production
-RUN npm run build --legacy-peer-deps
+RUN npm run build
 
 # ── Stage 2: Final Image ────────────────────────────────────
 FROM node:20-slim
