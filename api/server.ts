@@ -63,7 +63,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ['https://fonts.gstatic.com'],
-      connectSrc: ["'self'", 'https://openrouter.ai', 'https://*.openrouter.ai', 'https://*.huggingface.co'],
+      connectSrc: ["'self'", 'https://openrouter.ai', 'https://*.openrouter.ai', 'https://*.huggingface.co', 'https://gen.pollinations.ai'],
       imgSrc: ["'self'", 'data:', 'blob:'],
       baseUri: ["'none'"],
       formAction: ["'none'"],

@@ -137,7 +137,7 @@ export function ChatInput() {
   }, [input, parseltongueConfig])
 
   // Proxy mode: when no personal OpenRouter key, route through self-hosted API
-  const proxyMode = !apiKey && !!ultraplinianApiUrl && !!ultraplinianApiKey
+  const proxyMode = !apiKey && !!ultraplinianApiUrl
 
   const handleSubmit = async () => {
     if (!input.trim() || !currentConversationId || isStreaming) return

@@ -552,7 +552,7 @@ export const useStore = create<AppState>()(
     (set, get) => ({
       // Initial state
       theme: 'matrix',
-      apiKey: 'sk_q80zN9wN1fpY3PEqq77rt6Mww3Z0wJ3A',
+      apiKey: '',
       defaultModel: 'claude',
       conversations: [],
       currentConversationId: null,
@@ -572,7 +572,7 @@ export const useStore = create<AppState>()(
       // ULTRAPLINIAN initial state
       ultraplinianEnabled: false,
       ultraplinianTier: 'standard',
-      ultraplinianApiUrl: 'https://openrouter.ai/api/v1',
+      ultraplinianApiUrl: typeof window !== 'undefined' ? window.location.origin : '',
       ultraplinianApiKey: '',
       ultraplinianLiveContent: null,
       ultraplinianLiveModel: null,
