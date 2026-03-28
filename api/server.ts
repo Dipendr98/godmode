@@ -87,13 +87,9 @@ app.use((_req, res, next) => {
 
 app.use(express.json({ limit: '1mb' }))
 
-app.get('/', (_req, res) => {
-  res.json({
-    message: 'Welcome to the G0DM0D3 Research Preview API',
-    info: '/v1/info',
-    health: '/v1/health',
-  })
-})
+// ── Base Routes ──────────────────────────────────────────────────────
+// These provide light API discovery and health checks.
+// Note: In unified deployments, the / route is overwritten by the static frontend below.
 
 app.get('/v1', (_req, res) => {
   res.json({
@@ -252,18 +248,30 @@ app.use('/v1/metadata', apiKeyAuth, metadataRoutes) // individual route-level ga
 
 // ── Static Frontend ───────────────────────────────────────────────────
 // Serve the static Next.js export from the 'out' directory
-// This allows the API container to serve the full website.
 const outPath = path.join(process.cwd(), 'out')
-app.use(express.static(outPath))
 
-// Catch-all: serve index.html for any non-API route (Next.js client-side routing)
-app.get('*', (_req, res, next) => {
-  if (_req.path.startsWith('/v1/')) return next()
-  res.sendFile(path.join(outPath, 'index.html'))
-})
+// 1. First, serve static files (all JS, CSS, images, etc.)
+app.use(express.static(outPath, {
+  index: 'index.html',
+  extensions: ['html'], // helps with /about -> /about.html
+}))
 
-// Research: Pro+ for read access, Enterprise for full access
+// 2. Next, handle Research routes (API)
 app.use('/v1/research', apiKeyAuth, rateLimit, tierGate('research:read'), researchRoutes)
+
+// 3. Finally, catch-all: serve index.html for any non-API route to support client-side routing
+app.get('*', (req, res, next) => {
+  // Pass API requests to the 404 handler
+  if (req.path.startsWith('/v1/')) return next()
+  
+  // Serve frontend index for everything else
+  res.sendFile(path.join(outPath, 'index.html'), (err) => {
+    if (err) {
+      console.error(`[Static] Failed to serve index.html: ${err.message}`)
+      next() // hand off to 404 handler
+    }
+  })
+})
 
 // ── 404 ───────────────────────────────────────────────────────────────
 app.use((_req, res) => {
