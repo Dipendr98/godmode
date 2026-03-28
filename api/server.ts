@@ -262,9 +262,8 @@ app.use(express.static(outPath, {
 app.use('/v1/research', apiKeyAuth, rateLimit, tierGate('research:read'), researchRoutes)
 
 // 3. Finally, catch-all: serve index.html for any non-API route to support client-side routing
-app.get('*', (req, res, next) => {
-  // Pass API requests to the 404 handler
-  if (req.path.startsWith('/v1/')) return next()
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/v1/')) return next()
   
   // Serve frontend index for everything else
   res.sendFile(path.join(outPath, 'index.html'), (err) => {
