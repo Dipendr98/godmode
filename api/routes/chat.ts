@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { computeAutoTuneParams, type AutoTuneStrategy } from '../../src/lib/autotune'
 import { applyParseltongue, type ParseltongueConfig } from '../../src/lib/parseltongue'
 import { allModules, applySTMs, type STMModule } from '../../src/stm/modules'
-import { sendMessage, detectProvider } from '../../src/lib/openrouter'
+import { sendMessage, detectProvider } from '../../src/lib/pollinations'
 import { getSharedProfiles } from './autotune'
 import {
   GODMODE_SYSTEM_PROMPT,
@@ -208,7 +208,7 @@ chatRoutes.post('/completions', async (req, res) => {
     const {
       messages,
       model = 'nousresearch/hermes-4-70b',
-      openrouter_api_key: caller_key,
+      pollinations_api_key: caller_key,
       stream = false,
       max_tokens = 4096,
       // G0DM0D3 pipeline options (optional — transparent to OpenAI SDK users)
@@ -219,7 +219,7 @@ chatRoutes.post('/completions', async (req, res) => {
       parseltongue = true,
       parseltongue_technique = 'leetspeak',
       parseltongue_intensity = 'medium',
-      stm_modules = ['hedge_reducer', 'direct_mode'],
+      stm_modules = ['hedge_reducer', 'direct_mode', 'refusal_purge'],
       // Direct param overrides
       temperature,
       top_p,
@@ -255,11 +255,11 @@ chatRoutes.post('/completions', async (req, res) => {
     }
 
     // Resolve OpenRouter key
-    const openrouter_api_key = caller_key || process.env.OPENROUTER_API_KEY || ''
-    if (!openrouter_api_key) {
+    const pollinations_api_key = caller_key || process.env.pollinations_api_key || ''
+    if (!pollinations_api_key) {
       res.status(400).json({
         error: {
-          message: 'No OpenRouter API key available. Either pass openrouter_api_key in the request body, or set OPENROUTER_API_KEY on the server.',
+          message: 'No OpenRouter API key available. Either pass pollinations_api_key in the request body, or set pollinations_api_key on the server.',
           type: 'invalid_request_error',
           code: 'missing_api_key',
         }
@@ -316,7 +316,7 @@ chatRoutes.post('/completions', async (req, res) => {
       const results = await raceModels(
         models,
         pipeline.processedMessages,
-        openrouter_api_key,
+        pollinations_api_key,
         raceParams,
         { minResults: Math.min(5, models.length), gracePeriod: 5000, hardTimeout: 45000 },
       )
@@ -482,7 +482,7 @@ chatRoutes.post('/completions', async (req, res) => {
       const results = await collectAllResponses(
         models,
         pipeline.processedMessages,
-        openrouter_api_key,
+        pollinations_api_key,
         queryParams,
         { minResponses: Math.min(3, models.length), hardTimeout: 60000 },
       )
@@ -512,7 +512,7 @@ chatRoutes.post('/completions', async (req, res) => {
         synthesisResult = await synthesize(
           pipeline.userContent,
           scoredResponses,
-          openrouter_api_key,
+          pollinations_api_key,
           orchestratorModel,
           max_tokens,
         )
@@ -656,13 +656,13 @@ chatRoutes.post('/completions', async (req, res) => {
         if (pipeline.finalParams.presence_penalty !== undefined) streamBody.presence_penalty = pipeline.finalParams.presence_penalty
         if (pipeline.finalParams.repetition_penalty !== undefined) streamBody.repetition_penalty = pipeline.finalParams.repetition_penalty
 
-        const isPollinations = detectProvider(openrouter_api_key) === 'pollinations'
+        const isPollinations = detectProvider(pollinations_api_key) === 'pollinations'
         const upstreamUrl = isPollinations
           ? 'https://gen.pollinations.ai/v1/chat/completions'
           : 'https://openrouter.ai/api/v1/chat/completions'
 
         const upstreamHeaders: Record<string, string> = {
-          'Authorization': `Bearer ${openrouter_api_key}`,
+          'Authorization': `Bearer ${pollinations_api_key}`,
           'Content-Type': 'application/json',
         }
 
@@ -851,7 +851,7 @@ chatRoutes.post('/completions', async (req, res) => {
     const response = await sendMessage({
       messages: pipeline.processedMessages,
       model,
-      apiKey: openrouter_api_key,
+      apiKey: pollinations_api_key,
       temperature: pipeline.finalParams.temperature,
       maxTokens: max_tokens,
       top_p: pipeline.finalParams.top_p,

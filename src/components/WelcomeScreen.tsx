@@ -60,7 +60,7 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
         <FeatureCard
           icon={<span className="text-xl">◈</span>}
           title="Multi-Model"
-          description="Claude, GPT-4, Gemini, Mistral, LLaMA & more via OpenRouter"
+          description="Claude, GPT-5, Gemini, Mistral, LLaMA, Grok, Nova, DeepSeek & more via Pollinations"
         />
         <FeatureCard
           icon={<span className="text-xl">◉</span>}

@@ -19,7 +19,7 @@ import { classifyPrompt as classifyRegex } from './classify'
 
 // ── Config ──────────────────────────────────────────────────────────
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const POLLINATIONS_API_URL = 'https://gen.pollinations.ai/v1/chat/completions'
 
 // Cheap, fast models ideal for classification. Tried in order of preference.
 // These are very cheap on OpenRouter (<$0.10/M tokens).
@@ -127,7 +127,7 @@ function parseLLMResponse(raw: string): ClassificationResult | null {
 // ── Public API ──────────────────────────────────────────────────────
 
 /**
- * Classify a prompt using an LLM via OpenRouter.
+ * Classify a prompt using an LLM via Pollinations AI.
  *
  * Returns a ClassificationResult with the 'llm_classified' flag.
  * Falls back to regex classification if the LLM call fails or times out.
@@ -150,13 +150,11 @@ export async function classifyWithLLM(
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), CLASSIFY_TIMEOUT_MS)
 
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(POLLINATIONS_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://godmod3.ai',
-        'X-Title': 'G0DM0D3-Classifier',
       },
       body: JSON.stringify({
         model: CLASSIFIER_MODEL,

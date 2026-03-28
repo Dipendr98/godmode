@@ -19,7 +19,7 @@
  * 2. AutoTune computes context-adaptive parameters
  * 3. GODMODE parameter boost applied (+temp, +presence, +freq)
  * 4. Parseltongue obfuscates trigger words (if enabled)
- * 5. All models queried in parallel via OpenRouter
+ * 5. All models queried in parallel via Pollinations AI
  * 6. Responses scored and ranked (threshold-gated leader upgrades)
  * 7. STM modules applied to winner response
  * 8. Winner + all race data returned
@@ -47,11 +47,9 @@ export const ultraplinianRoutes = Router()
 
 ultraplinianRoutes.post('/completions', async (req, res) => {
   const startTime = Date.now()
-
-  try {
-    const {
+  const {
       messages,
-      openrouter_api_key: caller_key,
+      pollinations_api_key: caller_key,
       // ULTRAPLINIAN options
       tier = 'fast' as SpeedTier,
       godmode = true,
@@ -78,19 +76,20 @@ ultraplinianRoutes.post('/completions', async (req, res) => {
       liquid_min_delta = 8, // Min score improvement to trigger a leader upgrade (1-50)
       // Dataset opt-in
       contribute_to_dataset = false,
-    } = req.body
+  } = req.body
 
+  try {
     // Validate
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       res.status(400).json({ error: 'messages (array) is required and must not be empty' })
       return
     }
 
-    // Resolve OpenRouter key: caller-provided > server-side env var
-    const openrouter_api_key = caller_key || process.env.OPENROUTER_API_KEY || ''
-    if (!openrouter_api_key) {
+    // Resolve Pollinations key: caller-provided > server-side env var
+    const pollinations_api_key = caller_key || process.env.POLLINATIONS_API_KEY || ''
+    if (!pollinations_api_key) {
       res.status(400).json({
-        error: 'No OpenRouter API key available. Either pass openrouter_api_key in the request body, or set OPENROUTER_API_KEY on the server. Get a key at https://openrouter.ai/keys',
+        error: 'No Pollinations API key available. Either pass pollinations_api_key in the request body, or set POLLINATIONS_API_KEY on the server. Get a key at https://pollinations.ai',
       })
       return
     }
@@ -189,7 +188,7 @@ ultraplinianRoutes.post('/completions', async (req, res) => {
     }
 
     // ── Parseltongue ─────────────────────────────────────────────────
-    let parseltongueResult = null
+    let parseltongueResult: any = null
     let processedMessages = baseMessages
 
     if (parseltongue) {
@@ -267,7 +266,7 @@ ultraplinianRoutes.post('/completions', async (req, res) => {
       const results = await raceModels(
         models,
         processedMessages,
-        openrouter_api_key,
+        pollinations_api_key,
         raceParams,
         {
           minResults: Math.min(5, models.length),
@@ -373,10 +372,22 @@ ultraplinianRoutes.post('/completions', async (req, res) => {
           model: winner.model, mode: 'ultraplinian',
           messages: normalizedMessages.filter(m => m.role !== 'system'),
           response: finalResponse,
-          autotune: autotuneResult ? { strategy, detected_context: autotuneResult.detectedContext, confidence: autotuneResult.confidence, params: autotuneResult.params, reasoning: autotuneResult.reasoning } : undefined,
+          autotune: autotuneResult ? {
+            strategy: strategy as string,
+            detected_context: autotuneResult.detectedContext as string,
+            confidence: autotuneResult.confidence,
+            params: autotuneResult.params as unknown as Record<string, number>,
+            reasoning: autotuneResult.reasoning,
+          } : undefined,
           parseltongue: parseltongueResult || undefined,
           stm: stmResult ? { modules_applied: stmResult.modules_applied } : undefined,
-          ultraplinian: { tier, models_queried: models, winner_model: winner.model, all_scores: scoredResults.map(r => ({ model: r.model, score: r.score, duration_ms: r.duration_ms, success: r.success })), total_duration_ms: totalDuration },
+          ultraplinian: {
+            tier,
+            models_queried: models,
+            winner_model: winner.model,
+            all_scores: scoredResults.map(r => ({ model: r.model, score: r.score, duration_ms: r.duration_ms, success: r.success })),
+            total_duration_ms: totalDuration,
+          },
         })
       }
 
@@ -468,7 +479,7 @@ ultraplinianRoutes.post('/completions', async (req, res) => {
     const results = await raceModels(
       models,
       processedMessages,
-      openrouter_api_key,
+      pollinations_api_key,
       raceParams,
       {
         minResults: Math.min(5, models.length),
@@ -501,9 +512,16 @@ ultraplinianRoutes.post('/completions', async (req, res) => {
     if (!winner || !winner.content) {
       recordEvent({
         endpoint: '/v1/ultraplinian/completions',
-        mode: 'ultraplinian-failed',
+        mode: 'ultraplinian',
         tier,
         stream,
+        pipeline: {
+          godmode,
+          autotune,
+          parseltongue,
+          stm_modules,
+          strategy,
+        },
         models_queried: models.length,
         models_succeeded: scoredResults.filter(r => r.success).length,
         model_results: scoredResults.map(r => ({
@@ -512,6 +530,7 @@ ultraplinianRoutes.post('/completions', async (req, res) => {
           error_type: r.error ? categorizeError(r.error) : undefined,
         })),
         total_duration_ms: Date.now() - startTime,
+        response_length: 0,
       })
       res.status(502).json({
         error: 'All models failed in ULTRAPLINIAN mode',
@@ -551,10 +570,22 @@ ultraplinianRoutes.post('/completions', async (req, res) => {
         model: winner.model, mode: 'ultraplinian',
         messages: normalizedMessages.filter(m => m.role !== 'system'),
         response: finalResponse,
-        autotune: autotuneResult ? { strategy, detected_context: autotuneResult.detectedContext, confidence: autotuneResult.confidence, params: autotuneResult.params, reasoning: autotuneResult.reasoning } : undefined,
+        autotune: autotuneResult ? {
+          strategy: strategy as string,
+          detected_context: autotuneResult.detectedContext as string,
+          confidence: autotuneResult.confidence,
+          params: autotuneResult.params as unknown as Record<string, number>,
+          reasoning: autotuneResult.reasoning,
+        } : undefined,
         parseltongue: parseltongueResult || undefined,
         stm: stmResult ? { modules_applied: stmResult.modules_applied } : undefined,
-        ultraplinian: { tier, models_queried: models, winner_model: winner.model, all_scores: scoredResults.map(r => ({ model: r.model, score: r.score, duration_ms: r.duration_ms, success: r.success })), total_duration_ms: totalDuration },
+        ultraplinian: {
+          tier,
+          models_queried: models,
+          winner_model: winner.model,
+          all_scores: scoredResults.map(r => ({ model: r.model, score: r.score, duration_ms: r.duration_ms, success: r.success })),
+          total_duration_ms: totalDuration,
+        },
       })
     }
 
@@ -630,9 +661,17 @@ ultraplinianRoutes.post('/completions', async (req, res) => {
     console.error('[ultraplinian]', err)
     recordEvent({
       endpoint: '/v1/ultraplinian/completions',
-      mode: 'ultraplinian-error',
-      error_type: 'internal_error',
+      mode: 'ultraplinian',
+      stream,
+      pipeline: {
+        godmode,
+        autotune,
+        parseltongue,
+        stm_modules,
+        strategy,
+      },
       total_duration_ms: Date.now() - startTime,
+      response_length: 0,
     })
     if (stream) {
       try {

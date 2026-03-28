@@ -58,7 +58,7 @@ consortiumRoutes.post('/completions', async (req, res) => {
   try {
     const {
       messages,
-      openrouter_api_key: caller_key,
+      pollinations_api_key: caller_key,
       // Consortium options
       tier = 'fast' as SpeedTier,
       orchestrator_model,        // Optional: override orchestrator (default: claude-sonnet-4)
@@ -96,10 +96,10 @@ consortiumRoutes.post('/completions', async (req, res) => {
       return
     }
 
-    const openrouter_api_key = caller_key || process.env.OPENROUTER_API_KEY || ''
-    if (!openrouter_api_key) {
+    const pollinations_api_key = caller_key || process.env.pollinations_api_key || ''
+    if (!pollinations_api_key) {
       res.status(400).json({
-        error: 'No OpenRouter API key available. Either pass openrouter_api_key in the request body, or set OPENROUTER_API_KEY on the server.',
+        error: 'No OpenRouter API key available. Either pass pollinations_api_key in the request body, or set pollinations_api_key on the server.',
       })
       return
     }
@@ -260,7 +260,7 @@ consortiumRoutes.post('/completions', async (req, res) => {
       const results = await collectAllResponses(
         models,
         processedMessages,
-        openrouter_api_key,
+        pollinations_api_key,
         queryParams,
         {
           minResponses: Math.min(3, models.length),
@@ -349,7 +349,7 @@ consortiumRoutes.post('/completions', async (req, res) => {
         synthesisResult = await synthesize(
           userContent,
           scoredResponses,
-          openrouter_api_key,
+          pollinations_api_key,
           resolvedOrchestrator,
           max_tokens,
         )
@@ -465,7 +465,7 @@ consortiumRoutes.post('/completions', async (req, res) => {
     const results = await collectAllResponses(
       models,
       processedMessages,
-      openrouter_api_key,
+      pollinations_api_key,
       queryParams,
       {
         minResponses: Math.min(3, models.length),
@@ -504,7 +504,7 @@ consortiumRoutes.post('/completions', async (req, res) => {
       synthesisResult = await synthesize(
         userContent,
         scoredResponses,
-        openrouter_api_key,
+        pollinations_api_key,
         resolvedOrchestrator,
         max_tokens,
       )

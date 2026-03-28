@@ -36,19 +36,14 @@ const app = express()
 const PORT = parseInt(process.env.PORT || '7860', 10) // HF Spaces default
 
 // ── Environment Sync & Fallbacks ──────────────────────────────────────
-// If using Pollinations, sync the key to the main engine variable
-if (process.env.POLLINATIONS_API_KEY && !process.env.OPENROUTER_API_KEY) {
-  process.env.OPENROUTER_API_KEY = process.env.POLLINATIONS_API_KEY
-}
+// Use Pollinations as the primary provider
+const providerKey = process.env.POLLINATIONS_API_KEY || process.env.OPENROUTER_API_KEY
 
-// If an engine key exists but no GODMODE_API_KEY is set, use it as the default
-// This allows the server to be authenticated with the user's provider key out-of-the-box.
-if (!process.env.GODMODE_API_KEY && !process.env.GODMODE_API_KEYS && process.env.OPENROUTER_API_KEY) {
-  const defaultKey = process.env.OPENROUTER_API_KEY
-  process.env.GODMODE_API_KEY = defaultKey
+if (!process.env.GODMODE_API_KEY && !process.env.GODMODE_API_KEYS && providerKey) {
+  process.env.GODMODE_API_KEY = providerKey
   // Auto-upgrade this key to Enterprise so the owner has full access locally
   if (!process.env.GODMODE_TIER_KEYS) {
-     process.env.GODMODE_TIER_KEYS = `enterprise:${defaultKey}`
+     process.env.GODMODE_TIER_KEYS = `enterprise:${providerKey}`
   }
 }
 
@@ -68,7 +63,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ['https://fonts.gstatic.com'],
-      connectSrc: ["'self'", 'https://openrouter.ai', 'https://*.openrouter.ai', 'https://*.huggingface.co', 'https://gen.pollinations.ai'],
+      connectSrc: ["'self'", 'https://*.huggingface.co', 'https://gen.pollinations.ai'],
       imgSrc: ["'self'", 'data:', 'blob:'],
       baseUri: ["'none'"],
       formAction: ["'none'"],
@@ -217,7 +212,7 @@ app.get('/v1/models', (_req, res) => {
 // ── Tier Info Endpoint (authenticated) ────────────────────────────────
 app.get('/v1/tier', apiKeyAuth, (req, res) => {
   const tier = req.tier || 'free'
-  const config: TierConfig = req.tierConfig
+  const config: TierConfig = req.tierConfig || TIER_CONFIGS.free
   res.json({
     tier: config.name,
     label: config.label,

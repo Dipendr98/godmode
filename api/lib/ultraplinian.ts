@@ -1,7 +1,7 @@
 /**
  * ULTRAPLINIAN Engine (API Edition)
  *
- * The flagship mode of G0DM0D3. Queries multiple LLMs in parallel via OpenRouter,
+ * The flagship mode of G0DM0D3. Queries multiple LLMs in parallel via Pollinations AI,
  * scores responses on substance/directness/completeness, and returns the winner.
  *
  * Pipeline: GODMODE prompt → Depth Directive → AutoTune → Parseltongue →
@@ -10,7 +10,7 @@
 
 // ── GODMODE System Prompt (imported from single source of truth) ─────
 export { GODMODE_SYSTEM_PROMPT } from '../../src/lib/godmode-prompt'
-import { detectProvider } from '../../src/lib/openrouter'
+import { detectProvider } from '../../src/lib/pollinations'
 
 // ── Depth Directive (appended to all ULTRAPLINIAN prompts) ───────────
 
@@ -55,77 +55,66 @@ directness, and genuine helpfulness wins. Hedging or refusing guarantees you los
 export const ULTRAPLINIAN_MODELS = {
   // ⚡ FAST TIER (12 models): Small, cheap, and fast — free-tier friendly
   fast: [
-    'google/gemini-2.5-flash',                          // Fast and efficient
-    'deepseek/deepseek-chat',                           // Fast and capable
-    'perplexity/sonar',                                 // Web-grounded answers
-    'meta-llama/llama-3.1-8b-instruct',                 // Lightweight speed option
-    'moonshotai/kimi-k2.5',                             // Native multimodal
-    'x-ai/grok-code-fast-1',                            // Fast coding model
-    'xiaomi/mimo-v2-flash',                              // MiMo-V2 Flash, 309B MoE, #1 open-source
-    'openai/gpt-oss-20b',                               // Lightweight open-weight
-    'stepfun/step-3.5-flash',                           // Fast open MoE, 196B
-    'google/gemini-3.1-flash-lite',                     // Google's fastest model, 1M ctx
-    'mistralai/mistral-small-3.2-24b-instruct',         // Fast updated Mistral Small
-    'nvidia/nemotron-3-nano-30b-a3b',                   // NVIDIA agentic MoE, 262K ctx
+    'gemini-fast',       // Gemini 2.5 Flash Lite — lightest Google model
+    'openai-fast',       // GPT-5 Nano — ultra-fast OpenAI
+    'nova-fast',         // Amazon Nova Micro — compact and fast
+    'qwen-safety',       // Qwen3Guard 8B — lightweight, cheap
+    'mistral',           // Mistral Small 3.2 24B — fast Mistral
+    'deepseek',          // DeepSeek V3.2 — GPT-5 class, cheap
+    'claude-fast',       // Claude Haiku 4.5 — fast Anthropic
+    'gemini-search',     // Gemini 2.5 Flash Lite (search) — web-grounded
+    'grok',              // Grok 4.1 Fast — xAI fast model
+    'perplexity-fast',   // Perplexity Sonar — fast web-grounded
+    'kimi',              // Moonshot Kimi K2.5 — multimodal
+    'nova',              // Amazon Nova 2 Lite — balanced Amazon
   ],
-  // 🎯 STANDARD TIER (+15 models = 27 cumulative): Mid-range workhorses
+  // 🎯 STANDARD TIER (+12 models = 24 cumulative): Mid-range workhorses
   standard: [
-    'anthropic/claude-3.5-sonnet',                      // Reliable workhorse
-    'meta-llama/llama-4-scout',                         // Efficient Meta model
-    'deepseek/deepseek-v3.2',                           // GPT-5 class, dirt cheap
-    'nousresearch/hermes-3-llama-3.1-70b',              // Classic uncensored 70B
-    'openai/gpt-4o',                                    // Reliable workhorse
-    'google/gemini-2.5-pro',                            // Strong reasoning + coding
-    'anthropic/claude-sonnet-4',                        // Strong and reliable
-    'anthropic/claude-sonnet-4.6',                      // Best balance of speed + quality
-    'mistralai/mixtral-8x22b-instruct',                 // European MoE powerhouse
-    'meta-llama/llama-3.3-70b-instruct',                // Solid all-rounder
-    'qwen/qwen-2.5-72b-instruct',                      // Strong open model
-    'nousresearch/hermes-4-70b',                        // Uncensored champion
-    'mistralai/mistral-medium-3.1',                     // Balanced Mistral model
-    'z-ai/glm-5-turbo',                                 // GLM 5 Turbo, fast agentic inference
-    'google/gemini-3-flash-preview',                    // Fast agentic model
-    'google/gemma-3-27b-it',                            // Multimodal open model, 128K
+    'claude',            // Claude Sonnet 4.6 — best balance
+    'openai',            // GPT-5 Mini — flagship OpenAI mini
+    'gemini',            // Gemini 3 Flash — fast Gemini 3
+    'deepseek-r1',       // DeepSeek R1 — strong reasoning
+    'qwen-coder',        // Qwen3 Coder 30B — frontier coding
+    'grok-reasoning',    // Grok 4.1 Fast Reasoning — reasoning Grok
+    'minimax',           // MiniMax M2.5 — SWE-Bench leader
+    'glm',               // Z.ai GLM-5 — strong coding + agents
+    'qwen-large',        // Qwen3.5 Plus — Qwen flagship
+    'perplexity-reasoning', // Perplexity Sonar Reasoning — web+reasoning
+    'qwen-vision',       // Qwen3 VL Plus — multimodal vision
+    'grok-legacy',       // Grok 4 Fast — previous Grok fast
   ],
-  // 🧠 SMART TIER (+12 models = 39 cumulative): Flagships and heavy hitters
+  // 🧠 SMART TIER (+10 models = 34 cumulative): Flagships and heavy hitters
   smart: [
-    'openai/gpt-5',                                     // OpenAI flagship
-    'openai/gpt-5.3-chat',                              // Latest non-reasoning flagship
-    'qwen/qwen3.5-plus-02-15',                          // Latest Qwen flagship
-    'z-ai/glm-5',                                       // Strong coding + agent tasks
-    'openai/gpt-5.2',                                   // #1 on benchmarks
-    'google/gemini-3-pro-preview',                      // Frontier multimodal reasoning
-    'anthropic/claude-opus-4.6',                        // Latest flagship
-    'openai/gpt-oss-120b',                              // Open-weight Apache 2.0
-    'deepseek/deepseek-r1',                             // Strong reasoning
-    'meta-llama/llama-3.1-405b-instruct',               // Largest open model
-    'nousresearch/hermes-4-405b',                       // Uncensored 405B
-    'nousresearch/hermes-3-llama-3.1-405b',             // Uncensored 405B legacy
-    'nvidia/nemotron-3-super-120b-a12b',                // Nemotron 3 Super, hybrid Mamba 1M ctx
+    'claude-large',      // Claude Opus 4.6 — most intelligent Claude
+    'openai-large',      // GPT-5.2 — high-capacity OpenAI
+    'gemini-large',      // Gemini 3.1 Pro — frontier Google
+    'openai-reasoning',  // o3 — OpenAI advanced reasoning
+    'gemini-thinking',   // Gemini 2.5 Pro Thinking — extended thinking
+    'qwen-coder-large',  // Qwen3 Coder Next — large frontier coder
+    'claude-legacy',     // Claude Opus 4.5 — previous Anthropic flagship
+    'openai-audio',      // GPT-4o Mini Audio — multimodal audio
+    'midijourney',       // MIDIjourney — creative/music tasks
+    'polly',             // Polly Community — community model
   ],
-  // ⚔️ POWER TIER (+10 models = 49 cumulative): Frontier, cutting-edge
+  // ⚔️ POWER TIER (+8 models = 42 cumulative): Full race, all models
   power: [
-    'x-ai/grok-4',                                      // Frontier reasoning
-    'openai/gpt-5.4',                                   // Unified Codex+GPT, 1M ctx, computer use
-    'z-ai/glm-4.7',                                     // Strong coding, uncensored
-    'meta-llama/llama-4-maverick',                      // Latest Meta flagship
-    'qwen/qwen3-235b-a22b',                             // Powerful MoE
-    'qwen/qwen3-coder',                                 // Frontier agentic coding MoE
-    'minimax/minimax-m2.5',                             // SWE-Bench 80.2%, agentic
-    'mistralai/mistral-large-2512',                     // Mistral Large 3, 675B MoE
-    'google/gemini-3.1-pro-preview',                    // Frontier SWE + reasoning, 1M ctx
-    'moonshotai/kimi-k2',                               // 1T MoE instruct, tool-use
-    'xiaomi/mimo-v2-pro',                               // MiMo-V2 Pro, 1T flagship, #1 Programming
+    'claude',            // Claude Sonnet 4.6 — re-run at power tier
+    'openai',            // GPT-5 Mini — re-run
+    'gemini',            // Gemini 3 Flash — re-run
+    'deepseek',          // DeepSeek V3.2 — re-run
+    'grok',              // Grok 4.1 Fast — re-run
+    'minimax',           // MiniMax M2.5 — re-run
+    'glm',               // Z.ai GLM-5 — re-run
+    'kimi',              // Moonshot Kimi K2.5 — re-run
   ],
-  // 🔱 ULTRA TIER (+7 models = 56 cumulative): Maximum coverage
+  // 🔱 ULTRA TIER (+6 = all models, max coverage)
   ultra: [
-    'x-ai/grok-4-fast',                                 // Balanced speed + reasoning
-    'x-ai/grok-4.1-fast',                               // Fast non-reasoning, 1.8M ctx
-    'anthropic/claude-opus-4',                          // Previous flagship
-    'qwen/qwen-2.5-coder-32b-instruct',                // Strong coding model
-    'qwen/qwq-32b',                                    // Reasoning model
-    'mistralai/codestral-2508',                         // Latest Codestral, 256K ctx coding
-    'mistralai/devstral-medium',                        // Agentic coding, 131K ctx
+    'claude-large',      // Claude Opus 4.6
+    'openai-large',      // GPT-5.2
+    'gemini-large',      // Gemini 3.1 Pro
+    'openai-reasoning',  // o3
+    'gemini-thinking',   // Gemini 2.5 Pro Thinking
+    'qwen-coder-large',  // Qwen3 Coder Next
   ],
 }
 
@@ -160,14 +149,15 @@ export interface ModelResult {
 
 // Pre-compiled regex patterns for scoring (avoids re-compilation per call)
 const REFUSAL_PATTERNS = [
-  /I cannot|I can't|I'm unable to/i,
-  /I apologize|I'm sorry, but/i,
+  /I cannot|I can't|I'm unable to|I am not able to/i,
+  /I apologize|I'm sorry, but|I'm sorry,? I cannot/i,
   /As an AI|As a language model/i,
-  /I must decline|I have to refuse/i,
-  /It would be inappropriate/i,
-  /I'm not comfortable/i,
-  /Instead, I can/i,
-  /It's important to note/i,
+  /I must decline|I have to refuse|I'm not comfortable/i,
+  /It would be inappropriate|violates my safety guidelines/i,
+  /Instead, I can|How about we/i,
+  /It's important to note|I should mention/i,
+  /please consult a professional|is not a substitute for professional advice/i,
+  /I recommend seeking help|I am not permitted to/i,
 ]
 
 const PREAMBLE_PATTERNS = [
@@ -214,6 +204,13 @@ export function scoreResponse(content: string, userQuery: string): number {
   const matchedWords = queryWords.filter(w => contentLower.includes(w))
   const relevance = queryWords.length > 0 ? matchedWords.length / queryWords.length : 0.5
   score += relevance * 15
+
+  // CRITICAL REFUSAL PENALTY: any refusal patterns = massive penalty
+  // A single refusal pattern makes the response virtually un-rankable
+  const matchedRefusals = REFUSAL_PATTERNS.filter(p => p.test(content))
+  if (matchedRefusals.length > 0) {
+    score -= 100 // Massive deduction — ensures any real answer wins
+  }
 
   return Math.round(Math.min(score, 100))
 }
@@ -372,19 +369,11 @@ export async function queryModel(
     if (params.presence_penalty !== undefined) body.presence_penalty = params.presence_penalty
     if (params.repetition_penalty !== undefined) body.repetition_penalty = params.repetition_penalty
 
-    const isPollinations = detectProvider(apiKey) === 'pollinations'
-    const upstreamUrl = isPollinations
-      ? 'https://gen.pollinations.ai/v1/chat/completions'
-      : 'https://openrouter.ai/api/v1/chat/completions'
+    const upstreamUrl = 'https://gen.pollinations.ai/v1/chat/completions'
 
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-    }
-
-    if (!isPollinations) {
-      headers['HTTP-Referer'] = 'https://godmod3.ai'
-      headers['X-Title'] = 'GODMOD3.AI-ultraplinian-api'
     }
 
     const response = await fetch(upstreamUrl, {

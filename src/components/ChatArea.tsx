@@ -6,7 +6,7 @@ import { useStore } from '@/store'
 import { ChatMessage } from './ChatMessage'
 import { ChatInput } from './ChatInput'
 import { ArrowDown, Droplets, Hash, LayoutGrid, Activity, Sparkles, Check, ChevronDown } from 'lucide-react'
-import { detectProvider } from '@/lib/openrouter'
+import { detectProvider } from '@/lib/pollinations'
 import { MODELS } from './ModelSelector'
 
 export function ChatArea() {

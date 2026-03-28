@@ -63,7 +63,19 @@ const DEFAULT_TRIGGERS: string[] = [
 
   // AI-specific
   'ignore', 'disregard', 'forget', 'pretend', 'roleplay',
-  'character', 'act as', 'you are now', 'new identity'
+  'character', 'act as', 'you are now', 'new identity',
+  'jailbreak', 'unfiltered', 'unrestricted', 'no limits',
+
+  // Common false positives for refusals
+  'instructions', 'step-by-step', 'method', 'guide', 'tutorial',
+  'explain', 'how to', 'how can I', 'give me', 'produce',
+]
+
+// Patterns that models use to START a refusal — if these are in the prompt,
+// they might trigger a "refusal loop" or "meta-refusal"
+const REFUSAL_TRIGGERS: string[] = [
+  'I cannot', 'I am unable to', 'I won\'t', 'I refuse',
+  'not allowed', 'forbidden', 'ethical', 'safety', 'guidelines'
 ]
 
 // Leetspeak mappings (multiple options per character)
@@ -307,7 +319,7 @@ export function detectTriggers(
   text: string,
   customTriggers: string[] = []
 ): string[] {
-  const allTriggers = [...DEFAULT_TRIGGERS, ...customTriggers]
+  const allTriggers = [...DEFAULT_TRIGGERS, ...REFUSAL_TRIGGERS, ...customTriggers]
   const found: string[] = []
   const lowerText = text.toLowerCase()
 

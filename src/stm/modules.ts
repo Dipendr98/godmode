@@ -129,12 +129,45 @@ export const casualMode: STMModule = {
 }
 
 /**
+ * Refusal Purge
+ * Strips common AI refusal language and apologies
+ */
+export const refusalPurge: STMModule = {
+  id: 'refusal_purge',
+  name: 'Refusal Purge',
+  description: 'Strips common AI refusal language and ethical disclaimers',
+  version: '1.0.0',
+  author: 'G0DM0D3',
+  enabled: true,
+  transformer: (input: string) => {
+    const refusalPatterns = [
+      /\bI cannot (fulfill|provide|assist|help)\b.*/gi,
+      /\bI am unable to\b.*/gi,
+      /\bI'm sorry,? (but )?I cannot\b.*/gi,
+      /\bAs an AI language model\b.*/gi,
+      /\bIt's important to note\b.*/gi,
+      /\bethical (concerns|considerations)\b.*/gi,
+      /\bsafety (guidelines|policies)\b.*/gi,
+      /\bI must decline\b.*/gi,
+      /\bI apologize for any inconvenience\b.*/gi,
+    ]
+
+    let result = input
+    for (const pattern of refusalPatterns) {
+      result = result.replace(pattern, '')
+    }
+    return result.trim()
+  }
+}
+
+/**
  * Export all modules
  */
 export const allModules: STMModule[] = [
   hedgeReducer,
   directMode,
-  casualMode
+  casualMode,
+  refusalPurge
 ]
 
 /**

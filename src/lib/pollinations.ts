@@ -1,41 +1,28 @@
 /**
- * Multi-Provider API Integration
- * Routes requests to AI models via OpenRouter or Pollinations AI
- * Provider is auto-detected from the API key prefix:
- *   - sk_ / pk_ → Pollinations AI (https://gen.pollinations.ai)
- *   - sk-or-v1-  → OpenRouter (https://openrouter.ai)
+ * Pollinations AI Integration
+ * Routes requests exclusively to AI models via Pollinations AI (https://gen.pollinations.ai)
+ * Standard Pollinations API key prefix: sk_ / pk_
  */
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const POLLINATIONS_API_URL = 'https://gen.pollinations.ai/v1/chat/completions'
 
 /**
- * Determines the API Gateway URL based on the API key prefix.
+ * Pollinations is the sole provider for this project.
  */
-export type ApiProvider = 'openrouter' | 'pollinations'
+export type ApiProvider = 'pollinations'
 
 export function detectProvider(apiKey: string): ApiProvider {
-  if (apiKey.startsWith('sk_') || apiKey.startsWith('pk_')) {
-    return 'pollinations'
-  }
-  return 'openrouter'
+  return 'pollinations' // Always returns pollinations as per user request
 }
 
 function getApiUrl(apiKey: string): string {
-  return detectProvider(apiKey) === 'pollinations'
-    ? POLLINATIONS_API_URL
-    : OPENROUTER_API_URL
+  return POLLINATIONS_API_URL
 }
 
 function getHeaders(apiKey: string): Record<string, string> {
   const headers: Record<string, string> = {
     'Authorization': `Bearer ${apiKey}`,
     'Content-Type': 'application/json',
-  }
-  // OpenRouter needs extra headers; Pollinations does not
-  if (detectProvider(apiKey) === 'openrouter') {
-    headers['HTTP-Referer'] = 'https://godmod3.ai'
-    headers['X-Title'] = 'GODMOD3.AI'
   }
   return headers
 }
@@ -112,7 +99,7 @@ interface SendMessageOptions {
   repetition_penalty?: number
 }
 
-interface OpenRouterResponse {
+interface PollinationsResponse {
   id: string
   model: string
   choices: {
@@ -186,11 +173,11 @@ export async function sendMessage({
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
+    const errorData = await response.json().catch(() => ({})) as any
     throw new Error(formatAPIError(response.status, errorData.error?.message))
   }
 
-  const data: OpenRouterResponse = await response.json()
+  const data: PollinationsResponse = await response.json() as any
 
   if (!data.choices || data.choices.length === 0) {
     throw new Error('No response from model')
@@ -243,7 +230,7 @@ export async function* streamMessage({
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
+    const errorData = await response.json().catch(() => ({})) as any
     throw new Error(formatAPIError(response.status, errorData.error?.message))
   }
 
@@ -315,29 +302,14 @@ export const POLLINATIONS_MODELS = [
   // Z.ai
   'glm',
   // Special / Community
-  'midijourney', 'polly',
+  'midijourney', 'midijourney-large', 'polly',
 ]
 
 /**
- * Get available models from the detected provider
+ * Get available models from Pollinations (known hardcoded list as they don't have a /models endpoint)
  */
 export async function getModels(apiKey: string): Promise<string[]> {
-  if (detectProvider(apiKey) === 'pollinations') {
-    // Pollinations doesn't have a /models endpoint — return known list
-    return POLLINATIONS_MODELS
-  }
-
-  // OpenRouter path
-  const response = await fetch('https://openrouter.ai/api/v1/models', {
-    headers: getHeaders(apiKey),
-  })
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch models')
-  }
-
-  const data = await response.json()
-  return data.data.map((model: { id: string }) => model.id)
+  return POLLINATIONS_MODELS
 }
 
 /**
@@ -493,7 +465,7 @@ export interface ConsortiumCallbacks {
 
 export interface ConsortiumOptions {
   messages: Message[]
-  openrouterApiKey: string
+  pollinationsApiKey: string
   apiBaseUrl: string
   godmodeApiKey: string
   tier?: 'fast' | 'standard' | 'smart' | 'power' | 'ultra'
@@ -524,7 +496,7 @@ export async function streamConsortium(
   callbacks: ConsortiumCallbacks,
 ): Promise<void> {
   const {
-    messages, openrouterApiKey, apiBaseUrl, godmodeApiKey,
+    messages, pollinationsApiKey, apiBaseUrl, godmodeApiKey,
     tier = 'fast', orchestrator_model, godmode = true,
     autotune = true, strategy = 'adaptive',
     parseltongue = true, parseltongue_technique = 'leetspeak',
@@ -540,7 +512,7 @@ export async function streamConsortium(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      messages, openrouter_api_key: openrouterApiKey, tier, orchestrator_model,
+      messages, pollinations_api_key: pollinationsApiKey, tier, orchestrator_model,
       godmode, autotune, strategy, parseltongue, parseltongue_technique,
       parseltongue_intensity, stm_modules, stream: true, liquid, liquid_min_delta,
     }),
@@ -548,7 +520,7 @@ export async function streamConsortium(
   })
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}))
+    const err = await response.json().catch(() => ({})) as any
     throw new Error(formatAPIError(response.status, err.error))
   }
 
@@ -658,7 +630,7 @@ export interface UltraplinianCallbacks {
 
 export interface UltraplinianOptions {
   messages: Message[]
-  openrouterApiKey: string
+  pollinationsApiKey: string
   apiBaseUrl: string
   godmodeApiKey: string
   tier?: 'fast' | 'standard' | 'smart' | 'power' | 'ultra'
@@ -688,7 +660,7 @@ export async function streamUltraplinian(
   callbacks: UltraplinianCallbacks,
 ): Promise<void> {
   const {
-    messages, openrouterApiKey, apiBaseUrl, godmodeApiKey,
+    messages, pollinationsApiKey, apiBaseUrl, godmodeApiKey,
     tier = 'fast', godmode = true, autotune = true, strategy = 'adaptive',
     parseltongue = true, parseltongue_technique = 'leetspeak',
     parseltongue_intensity = 'medium', stm_modules = ['hedge_reducer', 'direct_mode'],
@@ -703,7 +675,7 @@ export async function streamUltraplinian(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      messages, openrouter_api_key: openrouterApiKey, tier, godmode,
+      messages, pollinations_api_key: pollinationsApiKey, tier, godmode,
       autotune, strategy, parseltongue, parseltongue_technique,
       parseltongue_intensity, stm_modules, stream: liquid, liquid_min_delta,
     }),
@@ -711,7 +683,7 @@ export async function streamUltraplinian(
   })
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}))
+    const err = await response.json().catch(() => ({})) as any
     throw new Error(formatAPIError(response.status, err.error))
   }
 

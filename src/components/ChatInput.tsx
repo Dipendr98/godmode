@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import { useStore } from '@/store'
-import { sendMessage, sendMessageViaProxy, streamUltraplinian, streamConsortium, streamMessage } from '@/lib/openrouter'
+import { sendMessage, sendMessageViaProxy, streamUltraplinian, streamConsortium, streamMessage } from '@/lib/pollinations'
 import { recordChatEvent } from '@/lib/telemetry'
 import { classifyPrompt } from '@/lib/classify'
 import { classifyWithLLM } from '@/lib/classify-llm'
@@ -279,7 +279,7 @@ export function ChatInput() {
 
       // ── SWARM PATH: Multi-Model Battle ────────────────────────────
       if (swarmModeEnabled && swarmModels.length > 0 && !consortiumEnabled && !ultraplinianEnabled) {
-        const activeSwarm = swarmModels.slice(0, 6) // Reasonable UI limit
+        const activeSwarm = swarmModels.slice(0, 20) // Increased limit for massive swarms (Pollinations friendly)
         
         const swarmPromises = activeSwarm.map(async (swarmModel) => {
           const assistantMsgId = addMessage(currentConversationId, {
@@ -336,7 +336,7 @@ export function ChatInput() {
         await streamConsortium(
           {
             messages,
-            openrouterApiKey: apiKey,
+            pollinationsApiKey: apiKey,
             apiBaseUrl: ultraplinianApiUrl,
             godmodeApiKey: ultraplinianApiKey,
             tier: consortiumTier,
@@ -420,7 +420,7 @@ export function ChatInput() {
         await streamUltraplinian(
           {
             messages,
-            openrouterApiKey: apiKey,
+            pollinationsApiKey: apiKey,
             apiBaseUrl: ultraplinianApiUrl,
             godmodeApiKey: ultraplinianApiKey,
             tier: ultraplinianTier,

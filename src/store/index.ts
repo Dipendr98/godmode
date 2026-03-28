@@ -583,7 +583,7 @@ export const useStore = create<AppState>()(
 
       // SWARM initial state
       swarmModeEnabled: false,
-      swarmModels: ['claude', 'openai', 'llama', 'deepseek'],
+      swarmModels: ['claude', 'openai', 'gemini', 'deepseek', 'grok', 'mistral', 'qwen-coder', 'phi', 'nova', 'minimax'],
 
       isHydrated: false,
 

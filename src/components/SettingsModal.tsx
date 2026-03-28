@@ -70,7 +70,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
       {/* Modal */}
       <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-theme-bg border border-theme-primary rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-theme-primary">
+        <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-theme-primary">
           <h2 className="text-xl font-bold theme-primary">Settings</h2>
           <button
             onClick={onClose}
@@ -84,7 +84,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         {/* Content Wrapper */}
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Sidebar */}
-          <nav className="w-44 flex-shrink-0 border-r border-theme-primary p-2 overflow-y-auto">
+          <nav className="w-40 flex-shrink-0 border-r border-theme-primary p-1.5 overflow-y-auto">
             <TabButton
               icon={<Key className="w-4 h-4" />}
               label="API Key"
@@ -166,7 +166,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           </nav>
 
           {/* Tab content */}
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-5 overflow-y-auto">
             {activeTab === 'api' && <APIKeyTab />}
             {activeTab === 'prompt' && <SystemPromptTab />}
             {activeTab === 'autotune' && <AutoTuneTab />}
@@ -228,18 +228,19 @@ function APIKeyTab() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold mb-2">OpenRouter API Key</h3>
+        <h3 className="text-lg font-semibold mb-2">Pollinations AI API Key</h3>
         <p className="text-sm theme-secondary mb-4">
           Your API key is stored locally and never sent to G0DM0D3 servers.
           Get your key at{' '}
           <a
-            href="https://openrouter.ai/keys"
+            href="https://pollinations.ai"
             target="_blank"
             rel="noopener noreferrer"
             className="theme-primary underline"
           >
-            openrouter.ai
+            pollinations.ai
           </a>
+          {' '}(check the models tab or discord).
         </p>
       </div>
 
@@ -249,7 +250,7 @@ function APIKeyTab() {
           value={localKey}
           onChange={(e) => setLocalKey(e.target.value)}
           onBlur={handleBlur}
-          placeholder="sk-or-v1-..."
+          placeholder="sk_..."
           className="w-full px-4 py-3 pr-20 bg-theme-dim border border-theme-primary rounded-lg
             focus:outline-none focus:glow-box"
         />
@@ -1726,7 +1727,7 @@ function UltraplinianTab() {
               <div className="text-sm">
                 <p className="font-semibold mb-1">How ULTRAPLINIAN Works</p>
                 <ul className="space-y-1 theme-secondary text-xs">
-                  <li>* Fires your prompt to all tier models in parallel via OpenRouter</li>
+                  <li>* Fires your prompt to all tier models in parallel via Pollinations</li>
                   <li>* Each response is scored on substance, directness, and relevance</li>
                   <li>* GODMODE prompt + Depth Directive injected automatically</li>
                   <li>* Requires a running ULTRAPLINIAN API backend</li>
