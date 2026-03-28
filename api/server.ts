@@ -73,7 +73,22 @@ app.use((_req, res, next) => {
 
 app.use(express.json({ limit: '1mb' }))
 
-// ── Health / Info (no auth required) ──────────────────────────────────
+app.get('/', (_req, res) => {
+  res.json({
+    message: 'Welcome to the G0DM0D3 Research Preview API',
+    info: '/v1/info',
+    health: '/v1/health',
+  })
+})
+
+app.get('/v1', (_req, res) => {
+  res.json({
+    message: 'G0DM0D3 API v1',
+    info: '/v1/info',
+    health: '/v1/health',
+  })
+})
+
 app.get('/v1/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() })
 })
@@ -113,7 +128,7 @@ app.get('/v1/info', (_req, res) => {
       'GET  /v1/research/info': 'Research dataset schema, repo info (Pro+)',
       'GET  /v1/research/stats': 'Aggregate stats across all published HF batches (Pro+)',
       'GET  /v1/research/batches': 'List all published batch files (Pro+)',
-      'GET  /v1/research/batch/*': 'Read a specific batch file (Pro+)',
+      'GET  /v1/research/batch/:path': 'Read a specific batch file (Pro+)',
       'GET  /v1/research/query': 'Query the full corpus with filters (Enterprise)',
       'POST /v1/research/flush': 'Force-flush in-memory buffers to HuggingFace (Enterprise)',
       'GET  /v1/research/download': 'Download full corpus as streaming JSONL (Enterprise)',
