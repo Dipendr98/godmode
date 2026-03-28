@@ -208,10 +208,10 @@ export function ChatArea() {
               }
 
               return grouped.map((group, gIdx) => (
-                <div key={gIdx} className={group.type === 'swarm' && group.items.length > 1 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 animate-in slide-in-from-bottom-2 duration-500' : ''}>
-                  {group.type === 'swarm' 
+                <div key={gIdx} className={group.type === 'swarm' && group.items && group.items.length > 1 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 animate-in slide-in-from-bottom-2 duration-500' : ''}>
+                  {group.type === 'swarm' && group.items
                     ? group.items.map(m => <ChatMessage key={m.id} message={m} />) 
-                    : <div className="max-w-4xl mx-auto"><ChatMessage message={group.item} /></div>
+                    : group.item && <div className="max-w-4xl mx-auto"><ChatMessage message={group.item} /></div>
                   }
                 </div>
               ))
