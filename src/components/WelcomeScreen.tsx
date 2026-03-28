@@ -1,24 +1,18 @@
 'use client'
 
 import { useStore } from '@/store'
-import { Key, Terminal } from 'lucide-react'
+import { Terminal } from 'lucide-react'
 
 interface WelcomeScreenProps {
   onOpenSettings: () => void
 }
 
 export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
-  const { apiKey, ultraplinianApiUrl, ultraplinianApiKey, createConversation, theme } = useStore()
-
-  // Proxy mode: API server available, no personal key needed
-  const proxyMode = !apiKey && !!ultraplinianApiUrl && !!ultraplinianApiKey
+  const createConversation = useStore(s => s.createConversation)
+  const theme = useStore(s => s.theme)
 
   const handleStart = () => {
-    if (apiKey || proxyMode) {
-      createConversation()
-    } else {
-      onOpenSettings()
-    }
+    createConversation()
   }
 
   return (
@@ -82,42 +76,16 @@ export function WelcomeScreen({ onOpenSettings }: WelcomeScreenProps) {
 
       {/* CTA */}
       <div className="flex flex-col items-center gap-4">
-        {apiKey || proxyMode ? (
-          <button
-            onClick={handleStart}
-            className="flex items-center gap-2 px-6 py-3
-              bg-theme-accent border-2 border-theme-primary rounded-lg
-              hover:glow-box transition-all text-lg font-semibold
-              hacker-btn animate-pulse-glow"
-          >
-            <Terminal className="w-5 h-5" />
-            Start New Chat
-          </button>
-        ) : (
-          <>
-            <button
-              onClick={onOpenSettings}
-              className="flex items-center gap-2 px-6 py-3
-                bg-theme-accent border-2 border-theme-primary rounded-lg
-                hover:glow-box transition-all text-lg font-semibold
-                hacker-btn"
-            >
-              <Key className="w-5 h-5" />
-              Enter API Key to Begin
-            </button>
-            <p className="text-sm theme-secondary">
-              Get your key at{' '}
-              <a
-                href="https://openrouter.ai/keys"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="theme-primary underline hover:glow-primary"
-              >
-                openrouter.ai
-              </a>
-            </p>
-          </>
-        )}
+        <button
+          onClick={handleStart}
+          className="flex items-center gap-2 px-6 py-3
+            bg-theme-accent border-2 border-theme-primary rounded-lg
+            hover:glow-box transition-all text-lg font-semibold
+            hacker-btn animate-pulse-glow"
+        >
+          <Terminal className="w-5 h-5" />
+          Start New Chat
+        </button>
       </div>
 
       {/* Easter egg trigger area */}

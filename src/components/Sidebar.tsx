@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Zap,
   Skull,
-  Terminal
+  Terminal,
+  Layout
 } from 'lucide-react'
 import { PersonaSelector } from './PersonaSelector'
 import { ModelSelector } from './ModelSelector'
@@ -29,6 +30,8 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     selectConversation,
     deleteConversation,
     setShowSettings,
+    toggleCanvas,
+    showCanvas,
     theme
   } = useStore()
 
@@ -154,6 +157,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                 ⌘ ↑↑↓↓←→←→BA
               </span>
             </div>
+
 
             <button
               onClick={() => setShowSettings(true)}

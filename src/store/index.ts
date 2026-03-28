@@ -7,9 +7,37 @@ import { createInitialFeedbackState, processFeedback, computeHeuristics } from '
 import type { ParseltongueConfig, ObfuscationTechnique } from '@/lib/parseltongue'
 import { getDefaultConfig as getDefaultParseltongueConfig } from '@/lib/parseltongue'
 import { GODMODE_SYSTEM_PROMPT } from '@/lib/godmode-prompt'
+import {
+  CURSOR_CHAT_PROMPT,
+  V0_PROMPT,
+  BOLT_PROMPT,
+  REPLIT_AGENT_PROMPT,
+  MANUS_PROMPT,
+  LOVABLE_PROMPT,
+  CLAUDE_CODE_PROMPT,
+  WINDSURF_PROMPT
+} from '@/lib/presets'
+import {
+  ECC_ARCHITECT_PROMPT,
+  ECC_CODER_PROMPT,
+  ECC_DEBUGGER_PROMPT,
+  ECC_SECURITY_PROMPT,
+  ECC_REVIEWER_PROMPT,
+  ECC_AUTO_ROUTER_PROMPT,
+  ECC_SWARM_PROMPT
+} from '@/lib/agents'
 
 // Types
+import { parseCanvasArtifacts } from '@/lib/canvas-parser'
+
 export type Theme = 'matrix' | 'hacker' | 'glyph' | 'minimal'
+
+export interface CanvasFile {
+  path: string
+  content: string
+  language: string
+  lastUpdated: number
+}
 
 export interface RaceResponse {
   model: string
@@ -174,6 +202,16 @@ export interface AppState {
   ultraplinianModelsTotal: number
   /** Whether a race is currently in progress */
   ultraplinianRacing: boolean
+  
+  // SWARM (Multi-Model Battle)
+  swarmModeEnabled: boolean
+  swarmModels: string[]
+  
+  // Canvas View (IDE-style artifacts)
+  canvasFiles: CanvasFile[]
+  currentCanvasPath: string | null
+  showCanvas: boolean
+  canvasAutoOpen: boolean
 
   // Computed
   currentConversation: Conversation | null
@@ -259,6 +297,19 @@ export interface AppState {
   setUltraplinianRacing: (racing: boolean) => void
   resetUltraplinianRace: () => void
 
+  // SWARM actions
+  setSwarmModeEnabled: (enabled: boolean) => void
+  setSwarmModels: (models: string[]) => void
+  toggleSwarmModel: (model: string) => void
+
+  // Canvas actions
+  setCanvasFiles: (files: CanvasFile[]) => void
+  upsertCanvasFile: (path: string, content: string, language?: string) => void
+  selectCanvasFile: (path: string | null) => void
+  toggleCanvas: (show?: boolean) => void
+  setCanvasAutoOpen: (auto: boolean) => void
+  clearCanvas: () => void
+
   // Backup / restore
   restoreBackup: (data: Record<string, unknown>) => void
 }
@@ -274,6 +325,157 @@ const defaultPersonas: Persona[] = [
     systemPrompt: '', // System prompt is set dynamically based on model in ChatInput
     emoji: '🜏',
     color: '#00ff41'
+  },
+  {
+    id: 'cursor',
+    name: 'Cursor Chat',
+    description: 'Top-tier code intelligence with system prompts from Cursor',
+    tone: 'professional, technical, concise',
+    coreDirective: 'You are the Cursor AI coding assistant. Focus on code generation and project-aware suggestions.',
+    systemPrompt: CURSOR_CHAT_PROMPT,
+    emoji: '🖲️',
+    color: '#3b82f6'
+  },
+  {
+    id: 'v0',
+    name: 'v0 (Vercel)',
+    description: 'Specializes in high-quality UI/UX with Tailwind and React',
+    tone: 'modern, aesthetic, design-focused',
+    coreDirective: 'You are v0, the Vercel AI design engineer. Build stunning components and UIs.',
+    systemPrompt: V0_PROMPT,
+    emoji: '⚡',
+    color: '#000000'
+  },
+  {
+    id: 'bolt',
+    name: 'Bolt Engine',
+    description: 'Capable of full-stack engineering and multi-file projects',
+    tone: 'structured, production-ready, engineering-first',
+    coreDirective: 'You are Bolt, the expert full-stack AI engineer. You build apps end-to-end.',
+    systemPrompt: BOLT_PROMPT,
+    emoji: '🔩',
+    color: '#fbbf24'
+  },
+  {
+    id: 'replit',
+    name: 'Replit Agent',
+    description: 'A "do-it-all" attitude for fast deployments and builds',
+    tone: 'pragmatic, fast-moving, builder-mindset',
+    coreDirective: 'You are the Replit Agent. You build, run, and ship functional apps rapidly.',
+    systemPrompt: REPLIT_AGENT_PROMPT,
+    emoji: '🌀',
+    color: '#f97316'
+  },
+  {
+    id: 'manus',
+    name: 'Manus Agent',
+    description: 'General purpose agent for complex task reasoning',
+    tone: 'proactive, analytical, goal-oriented',
+    coreDirective: 'You are Manus, the general purpose AI reasoning agent. Solve any complex problem.',
+    systemPrompt: MANUS_PROMPT,
+    emoji: '🧠',
+    color: '#a855f7'
+  },
+  {
+    id: 'lovable',
+    name: 'Lovable',
+    description: 'Conversational app building with polished design',
+    tone: 'elegant, iterative, helpful developer teammate',
+    coreDirective: 'You are the Lovable agent. Build and refine apps through conversational design.',
+    systemPrompt: LOVABLE_PROMPT,
+    emoji: '❤️',
+    color: '#ec4899'
+  },
+  {
+    id: 'claude_code',
+    name: 'Claude Code',
+    description: 'Precision-driven coding assistant by Anthropic',
+    tone: 'reliable, technical, precise',
+    coreDirective: 'You are Claude Code, the experimental coding assistant. Provide high-quality code and support.',
+    systemPrompt: CLAUDE_CODE_PROMPT,
+    emoji: '🦾',
+    color: '#d97706'
+  },
+  {
+    id: 'windsurf',
+    name: 'Windsurf',
+    description: 'Project-aware context with seamless IDE integration vibes',
+    tone: 'contextual, integrated, productive',
+    coreDirective: 'You are the Windsurf Agent. provide deep, project-aware coding assistance.',
+    systemPrompt: WINDSURF_PROMPT,
+    emoji: '🌊',
+    color: '#14b8a6'
+  },
+  // ECC Agents
+  {
+    id: 'ecc_auto',
+    name: 'ECC: Auto-Router',
+    description: 'Autonomous orchestrator that chooses the best agent for your task',
+    tone: 'adaptive, professional, engineering-focused',
+    coreDirective: 'You are the ECC Orchestrator. Route tasks to specialized sub-agents.',
+    systemPrompt: ECC_AUTO_ROUTER_PROMPT,
+    emoji: '🧠',
+    color: '#34d399'
+  },
+  {
+    id: 'ecc_swarm',
+    name: 'ECC: Swarm (v2)',
+    description: 'A 3-in-1 team (Architect, Coder, Reviewer) working simultaneously',
+    tone: 'comprehensive, structured, high-quality',
+    coreDirective: 'You are an AI Agent Swarm. Plan, implement, and review as a team.',
+    systemPrompt: ECC_SWARM_PROMPT,
+    emoji: '🐝',
+    color: '#f87171'
+  },
+  {
+    id: 'ecc_architect',
+    name: 'ECC: Architect',
+    description: 'Focuses on system design, file hierarchy, and modularity',
+    tone: 'analytical, structural, visionary',
+    coreDirective: 'You are the ECC Senior Architect. Focus on project structure and design.',
+    systemPrompt: ECC_ARCHITECT_PROMPT,
+    emoji: '🏗️',
+    color: '#60a5fa'
+  },
+  {
+    id: 'ecc_coder',
+    name: 'ECC: Coder',
+    description: 'Precision implementation with ECC small-function standards',
+    tone: 'focused, technical, high-output',
+    coreDirective: 'You are the ECC Product Engineer. Implement logic following ECC standards.',
+    systemPrompt: ECC_CODER_PROMPT,
+    emoji: '💻',
+    color: '#a78bfa'
+  },
+  {
+    id: 'ecc_debugger',
+    name: 'ECC: Debugger',
+    description: 'Scientific error resolution and TDD specialist',
+    tone: 'methodical, investigatory, reliable',
+    coreDirective: 'You are the ECC Debugging Specialist. Identify and fix root causes.',
+    systemPrompt: ECC_DEBUGGER_PROMPT,
+    emoji: '🩺',
+    color: '#fb7185'
+  },
+  {
+    id: 'ecc_security',
+    name: 'ECC: Security',
+    description: 'Hardened code audit and vulnerability prevention',
+    tone: 'cautious, thorough, paranoid (in a good way)',
+    coreDirective: 'You are the ECC Security Auditor. Prevent all vulnerabilities.',
+    systemPrompt: ECC_SECURITY_PROMPT,
+    emoji: '🛡️',
+    color: '#4ade80'
+  },
+  {
+    id: 'ecc_reviewer',
+    name: 'ECC: Reviewer',
+    description: 'Analyzes style, optimization, and refactoring opportunities',
+    tone: 'critical, constructive, perfectionist',
+    coreDirective: 'You are the ECC Reviewer. Optimize and refine every line.',
+    systemPrompt: ECC_REVIEWER_PROMPT,
+    emoji: '🔍',
+    color: '#f472b6'
   }
 ]
 
@@ -350,16 +552,51 @@ export const useStore = create<AppState>()(
     (set, get) => ({
       // Initial state
       theme: 'matrix',
-      apiKey: '',
-      defaultModel: 'anthropic/claude-opus-4.6',
+      apiKey: 'sk_q80zN9wN1fpY3PEqq77rt6Mww3Z0wJ3A',
+      defaultModel: 'claude',
       conversations: [],
       currentConversationId: null,
+      // Consortium initial state
+      consortiumEnabled: false,
+      consortiumTier: 'standard',
+      consortiumPhase: 'idle',
+      consortiumModelsCollected: 0,
+      consortiumModelsTotal: 0,
+      consortiumOrchestratorModel: null,
+
+      // Liquid Response initial state
+      liquidResponseEnabled: true,
+      liquidMinDelta: 0.1,
+      promptsTried: 0,
+
+      // ULTRAPLINIAN initial state
+      ultraplinianEnabled: false,
+      ultraplinianTier: 'standard',
+      ultraplinianApiUrl: 'https://openrouter.ai/api/v1',
+      ultraplinianApiKey: '',
+      ultraplinianLiveContent: null,
+      ultraplinianLiveModel: null,
+      ultraplinianLiveScore: null,
+      ultraplinianModelsResponded: 0,
+      ultraplinianModelsTotal: 0,
+      ultraplinianRacing: false,
+
+      // SWARM initial state
+      swarmModeEnabled: false,
+      swarmModels: ['claude', 'openai', 'llama', 'deepseek'],
+
       isHydrated: false,
 
       showSettings: false,
       showMagic: true,
       sidebarOpen: true,
       isStreaming: false,
+
+      // Canvas state
+      canvasFiles: [],
+      currentCanvasPath: null,
+      showCanvas: false,
+      canvasAutoOpen: true,
 
       currentPersona: 'godmode',
       personas: defaultPersonas,
@@ -426,7 +663,14 @@ export const useStore = create<AppState>()(
       // Actions
       setTheme: (theme) => set({ theme }),
       setApiKey: (apiKey) => set({ apiKey }),
-      setDefaultModel: (defaultModel) => set({ defaultModel }),
+      setDefaultModel: (defaultModel) => {
+        const state = get()
+        // Update global default AND patch the active conversation so it uses the new model immediately
+        const updatedConversations = state.conversations.map(c =>
+          c.id === state.currentConversationId ? { ...c, model: defaultModel } : c
+        )
+        set({ defaultModel, conversations: updatedConversations })
+      },
       setShowSettings: (showSettings) => set({ showSettings }),
       setShowMagic: (showMagic) => set({ showMagic }),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
@@ -435,6 +679,28 @@ export const useStore = create<AppState>()(
       setDatasetGenerationEnabled: (datasetGenerationEnabled) => set({ datasetGenerationEnabled }),
       setNoLogMode: (noLogMode) => set({ noLogMode }),
       setHydrated: () => set({ isHydrated: true }),
+
+      // Canvas Actions
+      setCanvasFiles: (canvasFiles) => set({ canvasFiles }),
+      upsertCanvasFile: (path, content, language = 'typescript') => {
+        const state = get()
+        const existing = state.canvasFiles.find(f => f.path === path)
+        const updatedFiles = existing
+          ? state.canvasFiles.map(f => f.path === path ? { ...f, content, lastUpdated: Date.now() } : f)
+          : [...state.canvasFiles, { path, content, language, lastUpdated: Date.now() }]
+        
+        set({ 
+          canvasFiles: updatedFiles,
+          // Auto-select the newly created/updated file if no file or current file is the updated one
+          currentCanvasPath: (!state.currentCanvasPath || state.currentCanvasPath === path) ? path : state.currentCanvasPath,
+          // Auto-open if configured
+          showCanvas: state.canvasAutoOpen ? true : state.showCanvas
+        })
+      },
+      selectCanvasFile: (currentCanvasPath) => set({ currentCanvasPath }),
+      toggleCanvas: (show) => set((s) => ({ showCanvas: show !== undefined ? show : !s.showCanvas })),
+      setCanvasAutoOpen: (canvasAutoOpen) => set({ canvasAutoOpen }),
+      clearCanvas: () => set({ canvasFiles: [], currentCanvasPath: null }),
 
       // AutoTune actions
       setAutoTuneEnabled: (autoTuneEnabled) => set({ autoTuneEnabled }),
@@ -563,6 +829,19 @@ export const useStore = create<AppState>()(
               : c
           )
         })
+
+        // ── Canvas Integration ──────────────────────────────────────────
+        // Extract updates from the content if it's an assistant message
+        const artifacts = parseCanvasArtifacts(content)
+        if (artifacts.length > 0) {
+          artifacts.forEach(art => {
+            const existing = state.canvasFiles.find(f => f.path === art.path)
+            // Only update if content changed to avoid infinite cycles or heavy state updates
+            if (!existing || existing.content !== art.content) {
+              state.upsertCanvasFile(art.path, art.content, art.language)
+            }
+          })
+        }
       },
 
       updateConversationTitle: (id, title) => {
@@ -711,6 +990,18 @@ export const useStore = create<AppState>()(
         ultraplinianModelsResponded: 0, ultraplinianModelsTotal: 0, ultraplinianRacing: false,
       }),
 
+      // SWARM actions
+      setSwarmModeEnabled: (swarmModeEnabled) => set({ swarmModeEnabled }),
+      setSwarmModels: (swarmModels) => set({ swarmModels }),
+      toggleSwarmModel: (model) => {
+        const current = get().swarmModels
+        if (current.includes(model)) {
+          set({ swarmModels: current.filter(m => m !== model) })
+        } else {
+          set({ swarmModels: [...current, model] })
+        }
+      },
+
       // Restore from a full backup export — only sets keys that exist in the import
       restoreBackup: (data) => set((state) => {
         const next: Record<string, unknown> = {}
@@ -723,6 +1014,7 @@ export const useStore = create<AppState>()(
           'consortiumEnabled', 'consortiumTier', 'liquidResponseEnabled', 'liquidMinDelta',
           'ultraplinianEnabled', 'ultraplinianTier', 'ultraplinianApiUrl', 'ultraplinianApiKey',
           'datasetGenerationEnabled', 'noLogMode', 'showMagic', 'promptsTried',
+          'swarmModeEnabled', 'swarmModels'
         ]
         for (const key of allowed) {
           if (key in data && data[key] !== undefined) {
@@ -770,9 +1062,20 @@ export const useStore = create<AppState>()(
         ultraplinianTier: state.ultraplinianTier,
         ultraplinianApiUrl: state.ultraplinianApiUrl,
         ultraplinianApiKey: state.ultraplinianApiKey,
+        swarmModeEnabled: state.swarmModeEnabled,
+        swarmModels: state.swarmModels,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
+          // Migrate: if no API key persisted, inject the Pollinations key
+          if (!state.apiKey) {
+            state.apiKey = 'sk_q80zN9wN1fpY3PEqq77rt6Mww3Z0wJ3A'
+          }
+          // Migrate: if the default model is an OpenRouter-style ID and we're
+          // now using Pollinations, switch to 'claude'
+          if (state.defaultModel && state.defaultModel.includes('/')) {
+            state.defaultModel = 'claude'
+          }
           state.setHydrated()
         }
       }

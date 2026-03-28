@@ -5,21 +5,21 @@ import { Sidebar } from '@/components/Sidebar'
 import { ChatArea } from '@/components/ChatArea'
 import { SettingsModal } from '@/components/SettingsModal'
 import { WelcomeScreen } from '@/components/WelcomeScreen'
+import { Canvas } from '@/components/Canvas'
 import { useStore } from '@/store'
+import { AnimatePresence } from 'framer-motion'
 import { useEasterEggs } from '@/hooks/useEasterEggs'
 import { useApiAutoDetect } from '@/hooks/useApiAutoDetect'
 
 export default function Home() {
-  const {
-    theme,
-    currentConversation,
-    showSettings,
-    setShowSettings,
-    apiKey,
-    ultraplinianApiUrl,
-    ultraplinianApiKey,
-    isHydrated
-  } = useStore()
+  // Use primitive/serializable state so Zustand can track changes properly.
+  // Avoid computed getters — they don't trigger re-renders in Zustand.
+  const theme = useStore(s => s.theme)
+  const isHydrated = useStore(s => s.isHydrated)
+  const showSettings = useStore(s => s.showSettings)
+  const setShowSettings = useStore(s => s.setShowSettings)
+  const currentConversationId = useStore(s => s.currentConversationId)
+  const showCanvas = useStore(s => s.showCanvas)
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
@@ -28,9 +28,6 @@ export default function Home() {
 
   // Auto-detect self-hosted API server at same origin
   useApiAutoDetect()
-
-  // Proxy mode: API server available but no personal OpenRouter key
-  const proxyMode = !apiKey && !!ultraplinianApiUrl && !!ultraplinianApiKey
 
   // Sync theme class to <html> so CSS variables (scrollbar colours, etc.)
   // cascade to elements outside <main>
@@ -64,14 +61,19 @@ export default function Home() {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
 
-      {/* Main content */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? 'ml-0' : 'ml-0'}`}>
-        {(!apiKey && !proxyMode) || !currentConversation ? (
+      {/* Main content — keyed on conversationId so ChatArea remounts cleanly */}
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+        {!currentConversationId ? (
           <WelcomeScreen onOpenSettings={() => setShowSettings(true)} />
         ) : (
-          <ChatArea />
+          <ChatArea key={currentConversationId} />
         )}
       </div>
+
+      {/* Canvas View (IDE) */}
+      <AnimatePresence>
+        {showCanvas && <Canvas key="canvas-engine" />}
+      </AnimatePresence>
 
       {/* Settings Modal */}
       {showSettings && (
@@ -80,3 +82,5 @@ export default function Home() {
     </main>
   )
 }
+
+

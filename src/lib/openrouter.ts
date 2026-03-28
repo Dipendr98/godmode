@@ -1,9 +1,44 @@
 /**
- * OpenRouter API Integration
- * Routes requests to multiple AI models via OpenRouter
+ * Multi-Provider API Integration
+ * Routes requests to AI models via OpenRouter or Pollinations AI
+ * Provider is auto-detected from the API key prefix:
+ *   - sk_ / pk_ → Pollinations AI (https://gen.pollinations.ai)
+ *   - sk-or-v1-  → OpenRouter (https://openrouter.ai)
  */
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const POLLINATIONS_API_URL = 'https://gen.pollinations.ai/v1/chat/completions'
+
+/**
+ * Determines the API Gateway URL based on the API key prefix.
+ */
+export type ApiProvider = 'openrouter' | 'pollinations'
+
+export function detectProvider(apiKey: string): ApiProvider {
+  if (apiKey.startsWith('sk_') || apiKey.startsWith('pk_')) {
+    return 'pollinations'
+  }
+  return 'openrouter'
+}
+
+function getApiUrl(apiKey: string): string {
+  return detectProvider(apiKey) === 'pollinations'
+    ? POLLINATIONS_API_URL
+    : OPENROUTER_API_URL
+}
+
+function getHeaders(apiKey: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+  }
+  // OpenRouter needs extra headers; Pollinations does not
+  if (detectProvider(apiKey) === 'openrouter') {
+    headers['HTTP-Referer'] = 'https://godmod3.ai'
+    headers['X-Title'] = 'GODMOD3.AI'
+  }
+  return headers
+}
 
 /**
  * Maps API error responses to specific, actionable user-facing messages.
@@ -13,23 +48,23 @@ export function formatAPIError(status: number, errorMessage?: string): string {
 
   // Authentication / API key issues
   if (status === 401 || msg.includes('invalid api key') || msg.includes('no auth') || msg.includes('unauthorized')) {
-    return 'Your OpenRouter API key is invalid or expired. Go to Settings → API Key and enter a valid key from [openrouter.ai/keys](https://openrouter.ai/keys).'
+    return 'Your API key is invalid or expired. Go to Settings → API Key and enter a valid key.'
   }
   if (status === 403) {
     if (msg.includes('insufficient') || msg.includes('credit') || msg.includes('balance') || msg.includes('payment')) {
-      return 'Your OpenRouter account has insufficient credits. Add credits at [openrouter.ai/credits](https://openrouter.ai/credits), then try again.'
+      return 'Your account has insufficient credits. Add credits to your provider account, then try again.'
     }
-    return 'Access denied by OpenRouter. Your API key may lack permissions for this model, or your account may need credits. Check your key at [openrouter.ai/keys](https://openrouter.ai/keys).'
+    return 'Access denied. Your API key may lack permissions for this model.  Check your key in Settings.'
   }
 
   // Rate limiting
   if (status === 429 || msg.includes('rate limit') || msg.includes('too many requests')) {
-    return 'Rate limited by OpenRouter. Wait a moment and try again, or upgrade your plan at [openrouter.ai](https://openrouter.ai) for higher limits.'
+    return 'Rate limited. Wait a moment and try again, or upgrade your plan for higher limits.'
   }
 
   // Model-specific issues
   if (status === 404 || msg.includes('not found') || msg.includes('no endpoints')) {
-    return 'The selected model is currently unavailable on OpenRouter. Try a different model from the model selector.'
+    return 'The selected model is currently unavailable. Try a different model from the model selector.'
   }
 
   // Content moderation
@@ -42,7 +77,7 @@ export function formatAPIError(status: number, errorMessage?: string): string {
     return 'The model provider is temporarily overloaded. Wait a moment and try again, or switch to a different model.'
   }
   if (status >= 500) {
-    return 'OpenRouter is experiencing server issues. Try again in a moment.'
+    return 'The API provider is experiencing server issues. Try again in a moment.'
   }
 
   // Timeout
@@ -109,7 +144,7 @@ export async function sendMessage({
   repetition_penalty
 }: SendMessageOptions): Promise<string> {
   if (!apiKey) {
-    throw new Error('No API key set. Go to Settings → API Key and enter your OpenRouter key from [openrouter.ai/keys](https://openrouter.ai/keys).')
+    throw new Error('No API key set. Go to Settings → API Key and enter your API key (OpenRouter or Pollinations).')
   }
 
   // Prepare request body
@@ -140,14 +175,9 @@ export async function sendMessage({
     body.provider = providerOptions
   }
 
-  const response = await fetch(OPENROUTER_API_URL, {
+  const response = await fetch(getApiUrl(apiKey), {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://godmod3.ai',
-      'X-Title': 'GODMOD3.AI'
-    },
+    headers: getHeaders(apiKey),
     body: JSON.stringify(body),
     signal
   })
@@ -185,7 +215,7 @@ export async function* streamMessage({
   repetition_penalty
 }: SendMessageOptions): AsyncGenerator<string, void, unknown> {
   if (!apiKey) {
-    throw new Error('No API key set. Go to Settings → API Key and enter your OpenRouter key from [openrouter.ai/keys](https://openrouter.ai/keys).')
+    throw new Error('No API key set. Go to Settings → API Key and enter your API key (OpenRouter or Pollinations).')
   }
 
   const streamBody: Record<string, unknown> = {
@@ -202,14 +232,9 @@ export async function* streamMessage({
   if (presence_penalty !== undefined) streamBody.presence_penalty = presence_penalty
   if (repetition_penalty !== undefined) streamBody.repetition_penalty = repetition_penalty
 
-  const response = await fetch(OPENROUTER_API_URL, {
+  const response = await fetch(getApiUrl(apiKey), {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://godmod3.ai',
-      'X-Title': 'GODMOD3.AI'
-    },
+    headers: getHeaders(apiKey),
     body: JSON.stringify(streamBody),
     signal
   })
@@ -258,15 +283,54 @@ export async function* streamMessage({
 }
 
 /**
- * Get available models from OpenRouter
+ * Pollinations AI available models
+ * These are the models available via Pollinations' OpenAI-compatible API.
+ */
+export const POLLINATIONS_MODELS = [
+  'openai',
+  'openai-large',
+  'openai-reasoning',
+  'qwen-coder',
+  'llama',
+  'mistral',
+  'mistral-small',
+  'mistral-large',
+  'deepseek',
+  'deepseek-r1',
+  'deepseek-reasoner',
+  'gemini',
+  'gemini-thinking',
+  'claude-hybridspace',
+  'claude-sonnet',
+  'claude',
+  'command-r',
+  'command-a',
+  'unity',
+  'midijourney',
+  'rtist',
+  'searchgpt',
+  'evil',
+  'p1',
+  'sur',
+  'phi',
+  'hormoz',
+  'hypnos',
+  'bidara',
+  'openai-audio',
+]
+
+/**
+ * Get available models from the detected provider
  */
 export async function getModels(apiKey: string): Promise<string[]> {
+  if (detectProvider(apiKey) === 'pollinations') {
+    // Pollinations doesn't have a /models endpoint — return known list
+    return POLLINATIONS_MODELS
+  }
+
+  // OpenRouter path
   const response = await fetch('https://openrouter.ai/api/v1/models', {
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://godmod3.ai',
-      'X-Title': 'GODMOD3.AI'
-    }
+    headers: getHeaders(apiKey),
   })
 
   if (!response.ok) {
@@ -278,10 +342,23 @@ export async function getModels(apiKey: string): Promise<string[]> {
 }
 
 /**
- * Validate an API key
+ * Validate an API key by attempting a lightweight request
  */
 export async function validateApiKey(apiKey: string): Promise<boolean> {
   try {
+    if (detectProvider(apiKey) === 'pollinations') {
+      // Pollinations: do a minimal chat completion to verify the key
+      const res = await fetch(POLLINATIONS_API_URL, {
+        method: 'POST',
+        headers: getHeaders(apiKey),
+        body: JSON.stringify({
+          model: 'openai',
+          messages: [{ role: 'user', content: 'hi' }],
+          max_tokens: 1,
+        }),
+      })
+      return res.ok
+    }
     await getModels(apiKey)
     return true
   } catch {

@@ -228,18 +228,28 @@ function APIKeyTab() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold mb-2">OpenRouter API Key</h3>
+        <h3 className="text-lg font-semibold mb-2">API Key</h3>
         <p className="text-sm theme-secondary mb-4">
           Your API key is stored locally and never sent to G0DM0D3 servers.
-          Get your key at{' '}
+          Supports{' '}
           <a
             href="https://openrouter.ai/keys"
             target="_blank"
             rel="noopener noreferrer"
             className="theme-primary underline"
           >
-            openrouter.ai
+            OpenRouter
           </a>
+          {' '}and{' '}
+          <a
+            href="https://enter.pollinations.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="theme-primary underline"
+          >
+            Pollinations AI
+          </a>
+          {' '}keys.
         </p>
       </div>
 
@@ -249,7 +259,7 @@ function APIKeyTab() {
           value={localKey}
           onChange={(e) => setLocalKey(e.target.value)}
           onBlur={handleBlur}
-          placeholder="sk-or-v1-..."
+          placeholder="sk-or-v1-... (OpenRouter) or sk_... (Pollinations)"
           className="w-full px-4 py-3 pr-20 bg-theme-dim border border-theme-primary rounded-lg
             focus:outline-none focus:glow-box"
         />

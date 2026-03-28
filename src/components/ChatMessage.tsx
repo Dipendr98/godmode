@@ -13,7 +13,11 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
-  const { personas, currentConversation, rateMessage, autoTuneEnabled, showMagic } = useStore()
+  const personas = useStore(s => s.personas)
+  const currentConversationId = useStore(s => s.currentConversationId)
+  const rateMessage = useStore(s => s.rateMessage)
+  const autoTuneEnabled = useStore(s => s.autoTuneEnabled)
+  const showMagic = useStore(s => s.showMagic)
   const [copied, setCopied] = useState(false)
   const [showTuneDetails, setShowTuneDetails] = useState(false)
   const [isLiquidMorphing, setIsLiquidMorphing] = useState(false)
@@ -70,7 +74,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   const isUser = message.role === 'user'
   const persona = !isUser
-    ? personas.find(p => p.id === (message.persona || currentConversation?.persona)) || personas[0]
+    ? personas.find(p => p.id === (message.persona || message.persona)) || personas[0]
     : null
 
   const handleCopy = async () => {
@@ -262,7 +266,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         )}
 
         {/* Model tag and feedback buttons for assistant messages */}
-        {showMagic && !isUser && (
+        {!isUser && (
           <div className="mt-3 pt-2 border-t border-theme-primary/20 text-xs theme-secondary">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
@@ -275,7 +279,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
               </div>
 
               {/* Feedback rating buttons */}
-              {autoTuneEnabled && currentConversation && (
+              {autoTuneEnabled && currentConversationId && (
                 <div className="flex items-center gap-1">
                   {message.autoTuneContext && (
                     <button
@@ -288,7 +292,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     </button>
                   )}
                   <button
-                    onClick={() => rateMessage(currentConversation.id, message.id, 1)}
+                    onClick={() => rateMessage(currentConversationId, message.id, 1)}
                     className={`p-1 rounded transition-all ${
                       message.feedbackRating === 1
                         ? 'text-green-400 bg-green-400/15'
@@ -300,7 +304,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     <ThumbsUp className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => rateMessage(currentConversation.id, message.id, -1)}
+                    onClick={() => rateMessage(currentConversationId, message.id, -1)}
                     className={`p-1 rounded transition-all ${
                       message.feedbackRating === -1
                         ? 'text-red-400 bg-red-400/15'

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import { useStore } from '@/store'
-import { sendMessage, sendMessageViaProxy, streamUltraplinian, streamConsortium } from '@/lib/openrouter'
+import { sendMessage, sendMessageViaProxy, streamUltraplinian, streamConsortium, streamMessage } from '@/lib/openrouter'
 import { recordChatEvent } from '@/lib/telemetry'
 import { classifyPrompt } from '@/lib/classify'
 import { classifyWithLLM } from '@/lib/classify-llm'
@@ -10,61 +10,65 @@ import type { ClassificationResult } from '@/lib/classify'
 import { computeAutoTuneParams, getContextLabel, getStrategyLabel, PARAM_META } from '@/lib/autotune'
 import type { AutoTuneResult } from '@/lib/autotune'
 import { applyParseltongue, detectTriggers } from '@/lib/parseltongue'
-import { Send, Loader2, StopCircle, SlidersHorizontal } from 'lucide-react'
+import { Send, Loader2, StopCircle, SlidersHorizontal, Paperclip, FileText, X } from 'lucide-react'
 
 export function ChatInput() {
-  const {
-    currentConversationId,
-    currentConversation,
-    addMessage,
-    updateMessageContent,
-    apiKey,
-    isStreaming,
-    setIsStreaming,
-    personas,
-    stmModules,
-    noLogMode,
-    autoTuneEnabled,
-    autoTuneStrategy,
-    autoTuneOverrides,
-    autoTuneLastResult,
-    setAutoTuneLastResult,
-    feedbackState,
-    memories,
-    memoriesEnabled,
-    parseltongueConfig,
-    customSystemPrompt,
-    useCustomSystemPrompt,
-    // Liquid Response (universal)
-    liquidResponseEnabled,
-    liquidMinDelta,
-    incrementPromptsTried,
-    // ULTRAPLINIAN
-    ultraplinianEnabled,
-    ultraplinianTier,
-    ultraplinianApiUrl,
-    ultraplinianApiKey,
-    ultraplinianRacing,
-    ultraplinianModelsResponded,
-    ultraplinianModelsTotal,
-    ultraplinianLiveModel,
-    ultraplinianLiveScore,
-    setUltraplinianLive,
-    setUltraplinianProgress,
-    setUltraplinianRacing,
-    resetUltraplinianRace,
-    // CONSORTIUM
-    consortiumEnabled,
-    consortiumTier,
-    consortiumPhase,
-    consortiumModelsCollected,
-    consortiumModelsTotal,
-    setConsortiumPhase,
-    setConsortiumProgress,
-    resetConsortium,
-  } = useStore()
+  // Use individual selectors so Zustand properly tracks each piece of state
+  const conversations = useStore(s => s.conversations)
+  const currentConversationId = useStore(s => s.currentConversationId)
+  // Derive locally — avoids broken computed getter that Zustand doesn't track
+  const currentConversation = conversations.find(c => c.id === currentConversationId) ?? null
+
+  const addMessage = useStore(s => s.addMessage)
+  const updateMessageContent = useStore(s => s.updateMessageContent)
+  const apiKey = useStore(s => s.apiKey)
+  const defaultModel = useStore(s => s.defaultModel)
+  const isStreaming = useStore(s => s.isStreaming)
+  const setIsStreaming = useStore(s => s.setIsStreaming)
+  const personas = useStore(s => s.personas)
+  const setCurrentPersona = useStore(s => s.setCurrentPersona)
+  const stmModules = useStore(s => s.stmModules)
+  const noLogMode = useStore(s => s.noLogMode)
+  const autoTuneEnabled = useStore(s => s.autoTuneEnabled)
+  const autoTuneStrategy = useStore(s => s.autoTuneStrategy)
+  const autoTuneOverrides = useStore(s => s.autoTuneOverrides)
+  const autoTuneLastResult = useStore(s => s.autoTuneLastResult)
+  const setAutoTuneLastResult = useStore(s => s.setAutoTuneLastResult)
+  const feedbackState = useStore(s => s.feedbackState)
+  const memories = useStore(s => s.memories)
+  const memoriesEnabled = useStore(s => s.memoriesEnabled)
+  const parseltongueConfig = useStore(s => s.parseltongueConfig)
+  const customSystemPrompt = useStore(s => s.customSystemPrompt)
+  const useCustomSystemPrompt = useStore(s => s.useCustomSystemPrompt)
+  const liquidResponseEnabled = useStore(s => s.liquidResponseEnabled)
+  const liquidMinDelta = useStore(s => s.liquidMinDelta)
+  const incrementPromptsTried = useStore(s => s.incrementPromptsTried)
+  const ultraplinianEnabled = useStore(s => s.ultraplinianEnabled)
+  const ultraplinianTier = useStore(s => s.ultraplinianTier)
+  const ultraplinianApiUrl = useStore(s => s.ultraplinianApiUrl)
+  const ultraplinianApiKey = useStore(s => s.ultraplinianApiKey)
+  const ultraplinianRacing = useStore(s => s.ultraplinianRacing)
+  const ultraplinianModelsResponded = useStore(s => s.ultraplinianModelsResponded)
+  const ultraplinianModelsTotal = useStore(s => s.ultraplinianModelsTotal)
+  const ultraplinianLiveModel = useStore(s => s.ultraplinianLiveModel)
+  const ultraplinianLiveScore = useStore(s => s.ultraplinianLiveScore)
+  const setUltraplinianLive = useStore(s => s.setUltraplinianLive)
+  const setUltraplinianProgress = useStore(s => s.setUltraplinianProgress)
+  const setUltraplinianRacing = useStore(s => s.setUltraplinianRacing)
+  const resetUltraplinianRace = useStore(s => s.resetUltraplinianRace)
+  const consortiumEnabled = useStore(s => s.consortiumEnabled)
+  const consortiumTier = useStore(s => s.consortiumTier)
+  const consortiumPhase = useStore(s => s.consortiumPhase)
+  const consortiumModelsCollected = useStore(s => s.consortiumModelsCollected)
+  const consortiumModelsTotal = useStore(s => s.consortiumModelsTotal)
+  const setConsortiumPhase = useStore(s => s.setConsortiumPhase)
+  const setConsortiumProgress = useStore(s => s.setConsortiumProgress)
+  const resetConsortium = useStore(s => s.resetConsortium)
+  const swarmModeEnabled = useStore(s => s.swarmModeEnabled)
+  const swarmModels = useStore(s => s.swarmModels)
 
   const [input, setInput] = useState('')
+  const [attachments, setAttachments] = useState<{ name: string; content: string }[]>([])
   const [showTuneDetails, setShowTuneDetails] = useState(false)
   const [parseltonguePreview, setParseltonguePreview] = useState<{
     triggersFound: string[]
@@ -137,27 +141,70 @@ export function ChatInput() {
 
   const handleSubmit = async () => {
     if (!input.trim() || !currentConversationId || isStreaming) return
-    if (!apiKey && !proxyMode) return
 
     const originalMessage = input.trim()
+    
+    // Combine text with attachments
+    let finalUserMessage = originalMessage
+    if (attachments.length > 0) {
+      finalUserMessage += '\n\n<attachments>\n'
+      attachments.forEach(file => {
+        finalUserMessage += `\nFILE: ${file.name}\n\`\`\`\n${file.content}\n\`\`\`\n`
+      })
+      finalUserMessage += '</attachments>'
+    }
+
+    // ── Handle Slash Commands ────────────────────────────────────────
+    if (originalMessage.startsWith('/') && attachments.length === 0) {
+      const command = originalMessage.slice(1).toLowerCase().split(' ')[0]
+      const personaMap: Record<string, string> = {
+        'cursor': 'cursor',
+        'v0': 'v0',
+        'replit': 'replit',
+        'bolt': 'bolt',
+        'claude': 'claude_code',
+        'manus': 'manus',
+        'lovable': 'lovable',
+        'windsurf': 'windsurf',
+        'god': 'godmode',
+        // ECC Agents
+        'auto': 'ecc_auto',
+        'swarm': 'ecc_swarm',
+        'arch': 'ecc_architect',
+        'code': 'ecc_coder',
+        'debug': 'ecc_debugger',
+        'sec': 'ecc_security',
+        'rev': 'ecc_reviewer'
+      }
+
+      if (personaMap[command]) {
+        setCurrentPersona(personaMap[command])
+        setInput('')
+        return
+      }
+    }
+
     setInput('')
+    setAttachments([]) // Clear after sending
     setIsStreaming(true)
     incrementPromptsTried()
 
     // Apply parseltongue obfuscation if enabled
-    const parseltongueResult = applyParseltongue(originalMessage, parseltongueConfig)
+    const parseltongueResult = applyParseltongue(finalUserMessage, parseltongueConfig)
     const userMessage = parseltongueResult.transformedText
 
 
-    // Add user message (show original to user, send transformed to API)
+
+    // Add user message (show original with attachment indicators to user, send combined to API)
     addMessage(currentConversationId, {
       role: 'user',
-      content: originalMessage  // Show original message in UI
+      content: originalMessage + (attachments.length > 0 ? `\n\n_Attached: ${attachments.map(f => f.name).join(', ')}_` : '')
     })
 
     // Get persona and model
     const persona = personas.find(p => p.id === currentConversation?.persona) || personas[0]
-    const model = currentConversation?.model || 'anthropic/claude-3-opus'
+    // Always use the currently selected model (defaultModel), not the stale conversation.model
+    const model = defaultModel || currentConversation?.model || 'claude'
 
     // Build memory context if enabled
     const activeMemories = memoriesEnabled ? memories.filter(m => m.active) : []
@@ -229,6 +276,50 @@ export function ChatInput() {
 
     try {
       abortControllerRef.current = new AbortController()
+
+      // ── SWARM PATH: Multi-Model Battle ────────────────────────────
+      if (swarmModeEnabled && swarmModels.length > 0 && !consortiumEnabled && !ultraplinianEnabled) {
+        const activeSwarm = swarmModels.slice(0, 6) // Reasonable UI limit
+        
+        const swarmPromises = activeSwarm.map(async (swarmModel) => {
+          const assistantMsgId = addMessage(currentConversationId, {
+            role: 'assistant',
+            content: '',
+            model: swarmModel,
+            persona: persona.id,
+          })
+
+          let fullContent = ''
+          try {
+            const stream = streamMessage({
+              messages: messages,
+              model: swarmModel,
+              apiKey: apiKey,
+              noLog: noLogMode,
+              signal: abortControllerRef.current?.signal,
+              temperature: tuneResult ? tuneResult.params.temperature : 0.7,
+              maxTokens: 4096
+            })
+
+            for await (const chunk of stream) {
+              fullContent += chunk
+              // Apply STM modules
+              let transformed = fullContent
+              stmModules.forEach(m => {
+                if (m.enabled) transformed = m.transformer(transformed)
+              })
+              updateMessageContent(currentConversationId, assistantMsgId, transformed)
+            }
+          } catch (err: any) {
+            updateMessageContent(currentConversationId, assistantMsgId, `Error calling model: ${err.message}`)
+          }
+        })
+
+        await Promise.allSettled(swarmPromises)
+        setIsStreaming(false)
+        return
+      }
+
 
       // ── CONSORTIUM PATH: Hive-mind synthesis ──────────────────────
       if (consortiumEnabled && ultraplinianApiUrl && ultraplinianApiKey && !ultraplinianEnabled) {
@@ -754,30 +845,77 @@ export function ChatInput() {
           </div>
         )}
 
-        <div className="flex items-end gap-3">
-          <div className="flex-1 relative">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={(apiKey || proxyMode) ? "Enter your message... (Shift+Enter for new line)" : "Set your API key in Settings first"}
-              disabled={(!apiKey && !proxyMode) || isStreaming}
-              rows={1}
-              className="w-full px-4 py-3 pr-12 bg-theme-bg border border-theme-primary rounded-lg
-                resize-none focus:outline-none focus:glow-box
-                placeholder:theme-secondary disabled:opacity-50
-                transition-all duration-200"
-              style={{ minHeight: '48px', maxHeight: '200px' }}
-            />
+      {/* Attachment Preview Area */}
+      {attachments.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2 p-1 overflow-x-auto no-scrollbar">
+          {attachments.map((file, idx) => (
+            <div key={idx} className="flex-shrink-0 flex items-center gap-2 px-2 py-1 bg-theme-accent/30 border border-theme-primary/50 rounded-md text-[10px] theme-primary animate-in fade-in slide-in-from-bottom-1">
+              <FileText className="w-3 h-3" />
+              <span className="truncate max-w-[100px]">{file.name}</span>
+              <button 
+                onClick={() => setAttachments(prev => prev.filter((_, i) => i !== idx))}
+                className="hover:text-red-500 transition-colors p-0.5"
+              >
+                <X className="w-2.5 h-2.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
-            {/* Character count */}
-            {input.length > 0 && (
-              <div className="absolute right-3 bottom-3 text-xs theme-secondary">
-                {input.length}
-              </div>
-            )}
-          </div>
+      <div className="flex items-end gap-3">
+        <div className="flex-1 relative">
+          {/* File Upload Hidden Input */}
+          <input 
+            type="file" 
+            id="file-upload" 
+            className="hidden" 
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files || [])
+              files.forEach(file => {
+                const reader = new FileReader()
+                reader.onload = (ev) => {
+                  setAttachments(prev => [...prev, {
+                    name: file.name,
+                    content: ev.target?.result as string
+                  }])
+                }
+                reader.readAsText(file) // Assumes text files; add parsing for others if needed
+              })
+              e.target.value = '' // Reset input so same file can be uploaded again if deleted
+            }}
+          />
+
+          <button
+            onClick={() => document.getElementById('file-upload')?.click()}
+            className="absolute left-3 bottom-3 p-1 hover:theme-primary transition-colors z-10 theme-secondary"
+            title="Upload Files"
+          >
+            <Paperclip className="w-4 h-4" />
+          </button>
+
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter your message... (Shift+Enter for new line)"
+            disabled={isStreaming}
+            className="w-full px-4 py-3 pl-10 pr-12 bg-theme-bg border border-theme-primary rounded-lg
+              resize-none focus:outline-none focus:glow-box
+              placeholder:theme-secondary disabled:opacity-50
+              transition-all duration-200"
+            style={{ minHeight: '48px', maxHeight: '200px' }}
+          />
+
+          {/* Character count */}
+          {input.length > 0 && (
+            <div className="absolute right-3 bottom-3 text-xs theme-secondary">
+              {input.length}
+            </div>
+          )}
+        </div>
 
           {/* Submit/Stop button */}
           {isStreaming ? (
@@ -792,7 +930,7 @@ export function ChatInput() {
           ) : (
             <button
               onClick={handleSubmit}
-              disabled={!input.trim() || (!apiKey && !proxyMode)}
+              disabled={!input.trim()}
               className="p-3 bg-theme-accent border border-theme-primary rounded-lg
                 hover:glow-box transition-all
                 disabled:opacity-50 disabled:cursor-not-allowed"
