@@ -638,7 +638,15 @@ export const useStore = create<AppState>()(
 
       // Actions
       setTheme: (theme) => set({ theme }),
-      setApiKey: (apiKey) => set({ apiKey }),
+      setApiKey: (apiKey) => {
+        const state = get()
+        const updates: any = { apiKey }
+        // If Ultraplinian key is empty, sync it for easier onboarding
+        if (!state.ultraplinianApiKey) {
+          updates.ultraplinianApiKey = apiKey
+        }
+        set(updates)
+      },
       setDefaultModel: (defaultModel) => {
         const state = get()
         // Update global default AND patch the active conversation so it uses the new model immediately
@@ -1050,6 +1058,11 @@ export const useStore = create<AppState>()(
           // Migrate: if no API key persisted, inject the Pollinations key
           if (!state.apiKey) {
             state.apiKey = 'sk_q80zN9wN1fpY3PEqq77rt6Mww3Z0wJ3A'
+          }
+          // REPAIR: if ultraplinianApiKey is empty but apiKey exists (from migration or manual),
+          // sync them so backend features work immediately without redundant entry.
+          if (!state.ultraplinianApiKey && state.apiKey) {
+            state.ultraplinianApiKey = state.apiKey
           }
           // Migrate: if the default model is an OpenRouter-style ID and we're
           // now using Pollinations, switch to 'claude'

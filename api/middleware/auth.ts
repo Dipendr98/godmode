@@ -68,7 +68,7 @@ export function apiKeyAuth(req: Request, res: Response, next: NextFunction): voi
   const authHeader = req.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.status(401).json({
-      error: 'Missing or invalid Authorization header. Use: Bearer <your-api-key>',
+      error: 'Missing G0DM0D3 API Key. Enter your key in Settings -> ULTRAPLINIAN (you can use your Pollinations/OpenRouter key here to authenticate with your backend).',
     })
     return
   }
