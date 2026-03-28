@@ -131,10 +131,15 @@ if (tierKeyMap.size > 0) {
 
 /**
  * Resolve the tier for a raw API key.
- * Returns 'free' for unknown keys or when no tier mapping exists.
+ * Returns 'enterprise' for local dev (no key) if no keys are configured,
+ * otherwise defaults to 'free' for unknown keys.
  */
 export function resolveTier(rawKey: string | null): Tier {
-  if (!rawKey) return 'free'
+  if (!rawKey) {
+    // If no API keys are configured at all, treat anonymous as Enterprise (local dev)
+    const hasAnyKeys = !!(process.env.GODMODE_API_KEY || process.env.GODMODE_API_KEYS)
+    return hasAnyKeys ? 'free' : 'enterprise'
+  }
   return tierKeyMap.get(rawKey) || 'free'
 }
 

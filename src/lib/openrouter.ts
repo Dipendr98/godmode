@@ -54,7 +54,10 @@ export function formatAPIError(status: number, errorMessage?: string): string {
     if (msg.includes('insufficient') || msg.includes('credit') || msg.includes('balance') || msg.includes('payment')) {
       return 'Your account has insufficient credits. Add credits to your provider account, then try again.'
     }
-    return 'Access denied. Your API key may lack permissions for this model.  Check your key in Settings.'
+    if (msg.includes('upgrade required')) {
+      return 'Upgrade Required: This feature (or model tier) requires a higher G0DM0D3 plan. If you are self-hosting, check your GODMODE_TIER_KEYS or use your provider key in Settings.'
+    }
+    return 'Access denied. Your API key may lack permissions for this model. Check your key in Settings.'
   }
 
   // Rate limiting
@@ -287,36 +290,32 @@ export async function* streamMessage({
  * These are the models available via Pollinations' OpenAI-compatible API.
  */
 export const POLLINATIONS_MODELS = [
-  'openai',
-  'openai-large',
-  'openai-reasoning',
-  'qwen-coder',
-  'llama',
+  // OpenAI
+  'openai', 'openai-fast', 'openai-large', 'openai-reasoning', 'openai-audio',
+  // Anthropic
+  'claude', 'claude-fast', 'claude-large', 'claude-legacy',
+  // Google Gemini
+  'gemini', 'gemini-fast', 'gemini-search', 'gemini-large', 'gemini-thinking',
+  // xAI Grok
+  'grok', 'grok-reasoning', 'grok-legacy',
+  // DeepSeek
+  'deepseek', 'deepseek-r1',
+  // Qwen
+  'qwen-coder', 'qwen-coder-large', 'qwen-large', 'qwen-vision', 'qwen-safety',
+  // Mistral
   'mistral',
-  'mistral-small',
-  'mistral-large',
-  'deepseek',
-  'deepseek-r1',
-  'deepseek-reasoner',
-  'gemini',
-  'gemini-thinking',
-  'claude-hybridspace',
-  'claude-sonnet',
-  'claude',
-  'command-r',
-  'command-a',
-  'unity',
-  'midijourney',
-  'rtist',
-  'searchgpt',
-  'evil',
-  'p1',
-  'sur',
-  'phi',
-  'hormoz',
-  'hypnos',
-  'bidara',
-  'openai-audio',
+  // Perplexity
+  'perplexity-fast', 'perplexity-reasoning',
+  // Amazon Nova
+  'nova-fast', 'nova',
+  // MiniMax
+  'minimax',
+  // Moonshot
+  'kimi',
+  // Z.ai
+  'glm',
+  // Special / Community
+  'midijourney', 'polly',
 ]
 
 /**

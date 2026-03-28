@@ -44,7 +44,12 @@ if (process.env.POLLINATIONS_API_KEY && !process.env.OPENROUTER_API_KEY) {
 // If an engine key exists but no GODMODE_API_KEY is set, use it as the default
 // This allows the server to be authenticated with the user's provider key out-of-the-box.
 if (!process.env.GODMODE_API_KEY && !process.env.GODMODE_API_KEYS && process.env.OPENROUTER_API_KEY) {
-  process.env.GODMODE_API_KEY = process.env.OPENROUTER_API_KEY
+  const defaultKey = process.env.OPENROUTER_API_KEY
+  process.env.GODMODE_API_KEY = defaultKey
+  // Auto-upgrade this key to Enterprise so the owner has full access locally
+  if (!process.env.GODMODE_TIER_KEYS) {
+     process.env.GODMODE_TIER_KEYS = `enterprise:${defaultKey}`
+  }
 }
 
 

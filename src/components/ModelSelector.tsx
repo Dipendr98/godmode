@@ -13,20 +13,55 @@ interface ModelInfo {
   context: string
 }
 
-// Pollinations AI models — short alias IDs (NOT 'org/model' style)
+// Pollinations AI models — short alias IDs (updated to match Pollinations platform)
 const POLLINATIONS_MODELS: ModelInfo[] = [
-  { id: 'claude',           name: 'Claude 3.5 Sonnet',  provider: 'Anthropic', description: 'Reliable workhorse',          context: '200K' },
-  { id: 'openai',           name: 'GPT-4o',              provider: 'OpenAI',    description: 'Flagship OpenAI model',       context: '128K' },
-  { id: 'openai-large',     name: 'GPT-4o Large',        provider: 'OpenAI',    description: 'High-capacity reasoning',     context: '128K' },
-  { id: 'openai-reasoning', name: 'o3',                  provider: 'OpenAI',    description: 'OpenAI reasoning model',      context: '128K' },
-  { id: 'gemini',           name: 'Gemini Pro',           provider: 'Google',    description: 'Multimodal reasoning',        context: '1M'   },
-  { id: 'gemini-thinking',  name: 'Gemini Thinking',     provider: 'Google',    description: 'Extended thinking',          context: '1M'   },
-  { id: 'deepseek',         name: 'DeepSeek V3',          provider: 'DeepSeek',  description: 'Fast and capable',           context: '128K' },
-  { id: 'deepseek-r1',      name: 'DeepSeek R1',          provider: 'DeepSeek',  description: 'Strong reasoning model',     context: '128K' },
-  { id: 'llama',            name: 'LLaMA 3.3 70B',        provider: 'Meta',      description: 'Solid open-source model',   context: '128K' },
-  { id: 'mistral',          name: 'Mistral Large',         provider: 'Mistral',   description: 'MoE powerhouse',            context: '128K' },
-  { id: 'qwen-coder',       name: 'Qwen Coder 32B',       provider: 'Qwen',      description: 'Strong coding model',       context: '128K' },
-  { id: 'phi',              name: 'Phi-4',                 provider: 'Microsoft', description: 'Compact and efficient',     context: '16K'  },
+  // ── OpenAI ──────────────────────────────────────────────────────────
+  { id: 'openai',           name: 'GPT-5 Mini',              provider: 'OpenAI',    description: 'Flagship GPT-5 mini',         context: '128K' },
+  { id: 'openai-fast',      name: 'GPT-5 Nano',              provider: 'OpenAI',    description: 'Ultra-fast OpenAI model',     context: '128K' },
+  { id: 'openai-large',     name: 'GPT-5.2',                 provider: 'OpenAI',    description: 'High-capacity reasoning',     context: '128K' },
+  { id: 'openai-reasoning', name: 'o3',                      provider: 'OpenAI',    description: 'Advanced reasoning model',    context: '128K' },
+  { id: 'openai-audio',     name: 'GPT-4o Mini Audio',       provider: 'OpenAI',    description: 'Multimodal audio support',    context: '128K' },
+  // ── Anthropic ───────────────────────────────────────────────────────
+  { id: 'claude',           name: 'Claude Sonnet 4.6',       provider: 'Anthropic', description: 'Best balance speed + quality',context: '200K' },
+  { id: 'claude-fast',      name: 'Claude Haiku 4.5',        provider: 'Anthropic', description: 'Fast and efficient Claude',   context: '200K' },
+  { id: 'claude-large',     name: 'Claude Opus 4.6',         provider: 'Anthropic', description: 'Most intelligent Claude',     context: '200K' },
+  { id: 'claude-legacy',    name: 'Claude Opus 4.5',         provider: 'Anthropic', description: 'Previous flagship Claude',    context: '200K' },
+  // ── Google ──────────────────────────────────────────────────────────
+  { id: 'gemini',           name: 'Gemini 3 Flash',          provider: 'Google',    description: 'Fast Gemini 3 model',         context: '1M'   },
+  { id: 'gemini-fast',      name: 'Gemini 2.5 Flash Lite',   provider: 'Google',    description: 'Lightest Gemini model',       context: '1M'   },
+  { id: 'gemini-search',    name: 'Gemini 2.5 Flash Lite',   provider: 'Google',    description: 'Web-grounded search variant', context: '1M'   },
+  { id: 'gemini-large',     name: 'Gemini 3.1 Pro',          provider: 'Google',    description: 'Frontier Gemini model',       context: '1M'   },
+  { id: 'gemini-thinking',  name: 'Gemini 2.5 Pro Thinking', provider: 'Google',    description: 'Extended thinking model',     context: '1M'   },
+  // ── xAI Grok ────────────────────────────────────────────────────────
+  { id: 'grok',             name: 'xAI Grok 4.1 Fast',       provider: 'xAI',       description: 'Fast Grok model',             context: '128K' },
+  { id: 'grok-reasoning',   name: 'Grok 4.1 Fast Reasoning', provider: 'xAI',       description: 'Reasoning-mode Grok',         context: '128K' },
+  { id: 'grok-legacy',      name: 'xAI Grok 4 Fast',         provider: 'xAI',       description: 'Previous Grok fast model',    context: '128K' },
+  // ── DeepSeek ────────────────────────────────────────────────────────
+  { id: 'deepseek',         name: 'DeepSeek V3.2',           provider: 'DeepSeek',  description: 'GPT-5 class, ultra cheap',    context: '128K' },
+  { id: 'deepseek-r1',      name: 'DeepSeek R1',             provider: 'DeepSeek',  description: 'Strong reasoning model',      context: '128K' },
+  // ── Qwen / Alibaba ──────────────────────────────────────────────────
+  { id: 'qwen-coder',       name: 'Qwen3 Coder 30B',         provider: 'Qwen',      description: 'Frontier coding model',       context: '128K' },
+  { id: 'qwen-coder-large', name: 'Qwen3 Coder Next',        provider: 'Qwen',      description: 'Large frontier coder',        context: '128K' },
+  { id: 'qwen-large',       name: 'Qwen3.5 Plus',            provider: 'Qwen',      description: 'Qwen flagship model',         context: '128K' },
+  { id: 'qwen-vision',      name: 'Qwen3 VL Plus',           provider: 'Qwen',      description: 'Multimodal vision model',     context: '128K' },
+  { id: 'qwen-safety',      name: 'Qwen3Guard 8B',           provider: 'Qwen',      description: 'Safety-focused small model',  context: '32K'  },
+  // ── Mistral ─────────────────────────────────────────────────────────
+  { id: 'mistral',          name: 'Mistral Small 3.2 24B',   provider: 'Mistral',   description: 'Fast updated Mistral Small',  context: '128K' },
+  // ── Perplexity ──────────────────────────────────────────────────────
+  { id: 'perplexity-fast',     name: 'Perplexity Sonar',         provider: 'Perplexity','description': 'Web-grounded fast answers', context: '128K' },
+  { id: 'perplexity-reasoning',name: 'Perplexity Sonar Reasoning',provider:'Perplexity','description': 'Reasoning with web access',  context: '128K' },
+  // ── Amazon ──────────────────────────────────────────────────────────
+  { id: 'nova-fast',        name: 'Amazon Nova Micro',        provider: 'Amazon',    description: 'Ultra-fast compact model',    context: '128K' },
+  { id: 'nova',             name: 'Amazon Nova 2 Lite',       provider: 'Amazon',    description: 'Balanced Nova model',         context: '128K' },
+  // ── MiniMax ─────────────────────────────────────────────────────────
+  { id: 'minimax',          name: 'MiniMax M2.5',             provider: 'MiniMax',   description: 'SWE-Bench leader, agentic',   context: '128K' },
+  // ── Moonshot ────────────────────────────────────────────────────────
+  { id: 'kimi',             name: 'Moonshot Kimi K2.5',       provider: 'Moonshot',  description: 'Native multimodal model',     context: '128K' },
+  // ── Z.ai ────────────────────────────────────────────────────────────
+  { id: 'glm',              name: 'Z.ai GLM-5',               provider: 'Z.ai',      description: 'Strong coding + agents',      context: '128K' },
+  // ── Special / Community ─────────────────────────────────────────────
+  { id: 'midijourney',      name: 'MIDIjourney',              provider: 'Pollinations','description': 'Music & creative tasks',    context: '8K'  },
+  { id: 'polly',            name: 'Polly (Community)',         provider: 'Pollinations','description': 'Community model by Itachi', context: '8K'  },
 ]
 
 // OpenRouter models — org/model style IDs
