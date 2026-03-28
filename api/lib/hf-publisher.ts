@@ -224,7 +224,7 @@ export function checkDatasetThreshold(currentSize: number, maxSize: number) {
 
 export function startPeriodicFlush() {
   if (!isPublisherEnabled()) {
-    console.warn('[HF Publisher] Periodic flush SKIPPED — publisher not enabled (missing HF_TOKEN or HF_DATASET_REPO)')
+    console.info('[HF Discovery] Research dataset publishing is disabled (HF_TOKEN/HF_DATASET_REPO missing). Data will stay in memory.')
     return
   }
 

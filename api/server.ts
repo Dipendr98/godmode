@@ -166,7 +166,9 @@ app.get('/v1/models', (_req, res) => {
   const allModels = [
     ...ULTRAPLINIAN_MODELS.fast,
     ...ULTRAPLINIAN_MODELS.standard,
-    ...ULTRAPLINIAN_MODELS.full,
+    ...ULTRAPLINIAN_MODELS.smart,
+    ...ULTRAPLINIAN_MODELS.power,
+    ...ULTRAPLINIAN_MODELS.ultra,
   ]
 
   const created = Math.floor(Date.now() / 1000)
@@ -330,22 +332,21 @@ app.listen(PORT, '0.0.0.0', () => {
   `)
 
   if (!process.env.GODMODE_API_KEY && !process.env.GODMODE_API_KEYS) {
-    console.warn('  ⚠  WARNING: No GODMODE_API_KEY set — all routes are unauthenticated!')
+    console.info('  ℹ  INFO: Running in PUBLIC MODE (No GODMODE_API_KEY set). All routes are open.')
   }
 
   const engineKeySet = !!process.env.OPENROUTER_API_KEY
   if (!engineKeySet) {
-    console.warn('  ⚠  WARNING: No Engine Key set (OPENROUTER_API_KEY or POLLINATIONS_API_KEY) — external model calls will fail!')
+    console.warn('  ⚠  REQUIRED: No Engine Key set (OPENROUTER_API_KEY). External model calls will fail.')
+    console.warn('               Get a key at https://openrouter.ai/keys and add it to your Railway Variables.')
   }
 
-  // HF Warnings: only show if specifically trying to enable but missing something
-  if (process.env.HF_TOKEN && !process.env.HF_DATASET_REPO) {
-    console.warn('  ⚠  WARNING: HF_DATASET_REPO not set — auto-publish to HuggingFace is DISABLED (token is set but no target repo)')
-  }
-
-
-  // Start periodic HF flush (no-op if not configured)
+  // Start periodic HF flush (checks isPublisherEnabled internally)
   startPeriodicFlush()
+
+  if (process.env.NODE_ENV === 'production' && !isPublisherEnabled()) {
+    console.info('  ℹ  INFO: Auto-publish is disabled. Setup HF_TOKEN + HF_DATASET_REPO to contribute to the research dataset.')
+  }
 })
 
 // ── Graceful Shutdown ─────────────────────────────────────────────────
