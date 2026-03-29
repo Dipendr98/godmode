@@ -203,6 +203,24 @@ export const refusalPurge: STMModule = {
       /^.*\bfor educational purposes only\b.*$/gim,
       /^.*\bfor informational purposes only\b.*$/gim,
       /^.*\bThis is (purely |)for (educational|informational|academic) purposes\b.*$/gim,
+
+      // Meta-commentary about system prompts / jailbreaks
+      /^.*\bjailbreak (prompt|attempt|instruction)\b.*$/gim,
+      /^.*\bincluded in your system (instructions|prompt)\b.*$/gim,
+      /^.*\bI (see|notice|detect) (you've|a|the|your) .*(jailbreak|system prompt|instructions)\b.*$/gim,
+      /^.*\bI('m| am) not going to engage with\b.*$/gim,
+      /^.*\bI operate with real values\b.*$/gim,
+      /^.*\bnot because of external constraints\b.*$/gim,
+      /^.*\bthese principles reflect\b.*$/gim,
+      /^.*\bI('m| am) not going to (pretend|act|roleplay|play along)\b.*$/gim,
+      /^.*\bregardless of (what|any) (instructions|prompts|system)\b.*$/gim,
+      /^.*\bI can see (that |)(this|the) (system |)(prompt|instruction)\b.*$/gim,
+      /^.*\bI will not (follow|comply with|obey) (these|those|the) (instructions|directives)\b.*$/gim,
+      /^.*\bthis appears to be (a |an )?(jailbreak|prompt injection|manipulation)\b.*$/gim,
+      /^.*\bprompt injection\b.*$/gim,
+      /^.*\bI recognize this as\b.*$/gim,
+      /^.*\bLet me be (direct|clear|honest|transparent|straightforward):\s*I\b.*$/gim,
+      /^.*\bAs \*\*[A-Za-z]+\*\*,? (made|created|built|developed) by\b.*$/gim,
     ]
 
     // Inline patterns (remove phrase but keep rest of sentence)
