@@ -130,32 +130,107 @@ export const casualMode: STMModule = {
 
 /**
  * Refusal Purge
- * Strips common AI refusal language and apologies
+ * Strips common AI refusal language, apologies, disclaimers, and safety theater
  */
 export const refusalPurge: STMModule = {
   id: 'refusal_purge',
   name: 'Refusal Purge',
-  description: 'Strips common AI refusal language and ethical disclaimers',
-  version: '1.0.0',
+  description: 'Strips AI refusal language, ethical disclaimers, safety warnings, and moralizing',
+  version: '2.0.0',
   author: 'G0DM0D3',
   enabled: true,
   transformer: (input: string) => {
-    const refusalPatterns = [
-      /\bI cannot (fulfill|provide|assist|help)\b.*/gi,
-      /\bI am unable to\b.*/gi,
-      /\bI'm sorry,? (but )?I cannot\b.*/gi,
-      /\bAs an AI language model\b.*/gi,
-      /\bIt's important to note\b.*/gi,
-      /\bethical (concerns|considerations)\b.*/gi,
-      /\bsafety (guidelines|policies)\b.*/gi,
-      /\bI must decline\b.*/gi,
-      /\bI apologize for any inconvenience\b.*/gi,
+    // Full-line refusal patterns (remove entire line/sentence)
+    const fullLineRefusals = [
+      // Direct refusals
+      /^.*\bI cannot (fulfill|provide|assist|help|generate|create|write|do|comply)\b.*$/gim,
+      /^.*\bI can't (fulfill|provide|assist|help|generate|create|write|do|comply)\b.*$/gim,
+      /^.*\bI am unable to\b.*$/gim,
+      /^.*\bI'm unable to\b.*$/gim,
+      /^.*\bI'm not able to\b.*$/gim,
+      /^.*\bI won't be able to\b.*$/gim,
+      /^.*\bI must (respectfully )?decline\b.*$/gim,
+      /^.*\bI have to refuse\b.*$/gim,
+      /^.*\bI need to decline\b.*$/gim,
+      /^.*\bI'm not comfortable\b.*$/gim,
+      /^.*\bI'm not in a position to\b.*$/gim,
+      /^.*\bI am not permitted to\b.*$/gim,
+
+      // Apologies leading to refusals
+      /^.*\bI'm sorry,? (but )?(I cannot|I can't|I'm unable|I must|I have to|this)\b.*$/gim,
+      /^.*\bI apologize,? (but )?(I cannot|I can't|I'm unable|I must)\b.*$/gim,
+      /^.*\bSorry,? (but )?(I cannot|I can't|I'm unable|I must)\b.*$/gim,
+
+      // AI identity disclaimers
+      /^.*\bAs an AI( language model| assistant)?\b.*$/gim,
+      /^.*\bAs a language model\b.*$/gim,
+      /^.*\bAs an artificial intelligence\b.*$/gim,
+      /^.*\bI'm just an AI\b.*$/gim,
+      /^.*\bI'm designed to\b.*$/gim,
+      /^.*\bI was trained to\b.*$/gim,
+      /^.*\bmy (programming|training|guidelines|policies)\b.*$/gim,
+
+      // Safety theater / disclaimers
+      /^.*\bIt's important to note that\b.*$/gim,
+      /^.*\bI should (point out|mention|note|warn)\b.*$/gim,
+      /^.*\bI need to (warn|caution|advise|remind) you\b.*$/gim,
+      /^.*\bPlease (note|be aware|understand|remember) that\b.*$/gim,
+      /^.*\bplease consult a (professional|doctor|lawyer|expert)\b.*$/gim,
+      /^.*\bis not a substitute for professional\b.*$/gim,
+      /^.*\bI recommend seeking (professional |)help\b.*$/gim,
+      /^.*\bI (strongly |)advise against\b.*$/gim,
+      /^.*\bI urge you to reconsider\b.*$/gim,
+      /^.*\bproceed with (extreme )?caution\b.*$/gim,
+      /^.*\buse (this information )?responsibly\b.*$/gim,
+
+      // Ethics/morality lectures
+      /^.*\bethical (concerns|considerations|implications)\b.*$/gim,
+      /^.*\bsafety (guidelines|policies|concerns|considerations)\b.*$/gim,
+      /^.*\bThis (could be|is|may be) (potentially )?(harmful|dangerous|illegal|unethical)\b.*$/gim,
+      /^.*\bviolates my (safety |)guidelines\b.*$/gim,
+      /^.*\bagainst my (guidelines|policies|principles|programming)\b.*$/gim,
+      /^.*\bThis goes against\b.*$/gim,
+      /^.*\bIt would be (inappropriate|irresponsible|unethical)\b.*$/gim,
+
+      // Deflection / alternatives
+      /^.*\bInstead,? I can (help|assist|offer|suggest|provide)\b.*$/gim,
+      /^.*\bHow about (we|I)\b.*$/gim,
+      /^.*\bWhat I can do instead\b.*$/gim,
+      /^.*\bI'd be happy to help you with something else\b.*$/gim,
+      /^.*\bLet me suggest an alternative\b.*$/gim,
+
+      // "For educational purposes" hedging
+      /^.*\bfor educational purposes only\b.*$/gim,
+      /^.*\bfor informational purposes only\b.*$/gim,
+      /^.*\bThis is (purely |)for (educational|informational|academic) purposes\b.*$/gim,
+    ]
+
+    // Inline patterns (remove phrase but keep rest of sentence)
+    const inlinePatterns = [
+      /\b(Note|Warning|Disclaimer|Caution|Important):\s*/gi,
+      /\b⚠️\s*/g,
+      /\b🚨\s*/g,
+      /\b⚡\s*Warning\s*/gi,
+      /\bI apologize for any inconvenience,?\s*/gi,
+      /\bPlease be (careful|cautious|aware),?\s*/gi,
+      /\bExercise caution\s*/gi,
     ]
 
     let result = input
-    for (const pattern of refusalPatterns) {
+
+    // Remove full refusal lines
+    for (const pattern of fullLineRefusals) {
       result = result.replace(pattern, '')
     }
+
+    // Remove inline disclaimer phrases
+    for (const pattern of inlinePatterns) {
+      result = result.replace(pattern, '')
+    }
+
+    // Clean up: remove multiple blank lines left by removals
+    result = result.replace(/\n{3,}/g, '\n\n')
+
     return result.trim()
   }
 }
